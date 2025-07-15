@@ -16,16 +16,14 @@ git clone https://github.com/PNKmath/superclaude-enterprise.git
 cd superclaude-enterprise
 ./install-enterprise.sh
 
-# 2. 프로젝트에서 hooks 설정 (Claude Code 자연어 지원)
-cd /your/project
-mkdir -p .claude
-cp /path/to/superclaude-enterprise/.claude/settings.json .claude/
+# 2. Claude Code MCP 서버 등록
+claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
 
-# 3. Claude Code에서 자연어로 바로 사용!
-# 이제 Claude Code 내에서 직접 입력 가능:
-/sc: 보안 취약점 검사해줘
-/sc: 로그인 기능 만들어줘
-/sc: API 성능 개선 필요
+# 3. Claude Code에서 자연어로 사용!
+# Claude Code에 자연어로 요청:
+"SuperClaude를 사용해서 보안 취약점을 검사해줘"
+"SuperClaude로 로그인 기능을 구현해줘"
+"API 성능을 개선해야 해"
 
 # 4. CLI에서도 사용 가능
 superclaude-enterprise hooks  # 활성 hooks 확인
@@ -273,15 +271,15 @@ sc-enterprise insights --team backend-team
 
 ### 🌟 Claude Code에서 자연어로 사용하기
 
-`.claude/settings.json`이 설정되어 있다면, Claude Code에서 바로 자연어 입력 가능:
+MCP 서버가 등록되어 있다면, Claude Code에서 자연어로 요청:
 
-```bash
-# Claude Code 내에서 직접 입력:
-/sc: 이 코드의 보안 문제를 찾아줘
-/sc: 사용자 인증 시스템 구현
-/sc: API 속도가 느려서 개선 필요해
-/sc: check for memory leaks
-/sc: implement caching system
+```
+# Claude Code에 자연어로 입력:
+"SuperClaude를 사용해서 이 코드의 보안 문제를 찾아줘"
+"SuperClaude로 사용자 인증 시스템을 구현해줘"
+"API 속도가 느려서 SuperClaude로 개선이 필요해"
+"Use SuperClaude to check for memory leaks"
+"Implement caching system with SuperClaude"
 ```
 
 자동으로:
@@ -298,14 +296,14 @@ sc-enterprise hooks
 
 ### 기본 제공 Hooks
 
-1. **자연어 처리**: `/sc:` 뒤의 자유로운 입력을 명령어로 변환
-2. **보안 차단**: 위험한 명령어 자동 차단
-3. **자동 포맷팅**: Python (black, ruff), TypeScript (prettier, eslint)
-4. **충돌 검사**: 페르소나 충돌 자동 확인
-5. **테스트 실행**: 변경된 파일 관련 테스트 자동 실행
+1. **보안 차단**: 위험한 명령어 자동 차단
+2. **자동 포맷팅**: Python (black, ruff), TypeScript (prettier, eslint)
+3. **충돌 검사**: 페르소나 충돌 자동 확인
+4. **테스트 실행**: 변경된 파일 관련 테스트 자동 실행
+5. **완료 검증**: 테스트 및 린트 검사
 
 ### Hook 설정 파일
-- `.claude/settings.json` - 프로젝트 hooks (자연어 처리 포함)
+- `.claude/settings.json` - 프로젝트 hooks (도구 실행 시 자동화)
 - `.claude/settings.local.json` - 개인 hooks
 - `~/.claude/settings.json` - 전역 hooks
 
