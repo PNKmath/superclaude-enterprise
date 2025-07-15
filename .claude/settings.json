@@ -21,6 +21,14 @@
           "query": "--skip-validation"
         },
         "command": "superclaude-enterprise check-veto security --command \"$CLAUDE_TOOL_INPUT\""
+      },
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "/sc:"
+        },
+        "command": "superclaude-enterprise natural \"$CLAUDE_TOOL_INPUT\" --execute",
+        "description": "Process natural language /sc: commands"
       }
     ],
     "PostToolUse": [

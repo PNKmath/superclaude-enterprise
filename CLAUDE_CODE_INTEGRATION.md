@@ -19,12 +19,14 @@ mkdir -p .claude
 
 2. **SuperClaude Enterprise hooks 복사**:
 ```bash
-# 기본 hooks 사용
+# 기본 hooks 사용 (자연어 처리 포함!)
 cp /path/to/superclaude-enterprise/.claude/settings.json .claude/
 
 # 또는 언어별 템플릿 사용
 cp /path/to/superclaude-enterprise/.claude/hooks/typescript-project.json .claude/settings.json
 ```
+
+**중요**: 기본 settings.json에는 자연어 처리 hook이 포함되어 있습니다!
 
 3. **PATH 확인**:
 ```bash

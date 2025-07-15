@@ -16,12 +16,18 @@ git clone https://github.com/PNKmath/superclaude-enterprise.git
 cd superclaude-enterprise
 ./install-enterprise.sh
 
-# 2. 프로젝트에서 hooks 설정
+# 2. 프로젝트에서 hooks 설정 (Claude Code 자연어 지원)
 cd /your/project
 mkdir -p .claude
-cp /path/to/superclaude-enterprise/.claude/hooks/typescript-project.json .claude/settings.json
+cp /path/to/superclaude-enterprise/.claude/settings.json .claude/
 
-# 3. 사용 시작
+# 3. Claude Code에서 자연어로 바로 사용!
+# 이제 Claude Code 내에서 직접 입력 가능:
+/sc: 보안 취약점 검사해줘
+/sc: 로그인 기능 만들어줘
+/sc: API 성능 개선 필요
+
+# 4. CLI에서도 사용 가능
 superclaude-enterprise hooks  # 활성 hooks 확인
 superclaude-enterprise run "/sc:analyze" -p security,architect
 ```
@@ -55,6 +61,7 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 - Git hooks 자동 통합
 - IDE 저장 시 즉시 분석
 - 배치 처리 및 캐싱으로 성능 최적화
+- **자연어 명령어 처리**: `/sc: 자유로운 한국어/영어 입력`
 
 ### 6. **학습 엔진**
 - 사용 패턴 자동 학습
@@ -242,6 +249,24 @@ sc-enterprise insights --team backend-team
 
 ## 🪝 Claude Code Hooks
 
+### 🌟 Claude Code에서 자연어로 사용하기
+
+`.claude/settings.json`이 설정되어 있다면, Claude Code에서 바로 자연어 입력 가능:
+
+```bash
+# Claude Code 내에서 직접 입력:
+/sc: 이 코드의 보안 문제를 찾아줘
+/sc: 사용자 인증 시스템 구현
+/sc: API 속도가 느려서 개선 필요해
+/sc: check for memory leaks
+/sc: implement caching system
+```
+
+자동으로:
+- 적절한 SuperClaude 명령어로 변환 (analyze, implement, improve 등)
+- 관련 페르소나 추천 (security, backend, performance 등)
+- 충돌 해결 및 최적화 적용
+
 ### Hook 설정 확인
 
 ```bash
@@ -251,17 +276,18 @@ sc-enterprise hooks
 
 ### 기본 제공 Hooks
 
-1. **보안 차단**: 위험한 명령어 자동 차단
-2. **자동 포맷팅**: Python (black, ruff), TypeScript (prettier, eslint)
-3. **충돌 검사**: 페르소나 충돌 자동 확인
-4. **테스트 실행**: 변경된 파일 관련 테스트 자동 실행
+1. **자연어 처리**: `/sc:` 뒤의 자유로운 입력을 명령어로 변환
+2. **보안 차단**: 위험한 명령어 자동 차단
+3. **자동 포맷팅**: Python (black, ruff), TypeScript (prettier, eslint)
+4. **충돌 검사**: 페르소나 충돌 자동 확인
+5. **테스트 실행**: 변경된 파일 관련 테스트 자동 실행
 
 ### Hook 설정 파일
-- `.claude/settings.json` - 프로젝트 hooks
+- `.claude/settings.json` - 프로젝트 hooks (자연어 처리 포함)
 - `.claude/settings.local.json` - 개인 hooks
 - `~/.claude/settings.json` - 전역 hooks
 
-자세한 내용은 [HOOKS.md](HOOKS.md) 참조
+자세한 내용은 [CLAUDE_CODE_INTEGRATION.md](CLAUDE_CODE_INTEGRATION.md) 참조
 
 ## ⚙️ 설정
 
