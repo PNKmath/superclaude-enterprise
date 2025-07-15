@@ -39,7 +39,8 @@ export class ExtensionManager {
 
   constructor(config: Config) {
     this.logger = createLogger('ExtensionManager');
-    this.superClaudePath = path.join(process.cwd(), 'SuperClaude');
+    // Look for SuperClaude in multiple locations
+    this.superClaudePath = this.findSuperClaudePath();
     
     // Initialize components
     this.conflictResolver = new ConflictResolver(this.logger);
@@ -49,6 +50,29 @@ export class ExtensionManager {
     this.learningEngine = new LearningEngine(this.logger);
     this.securityLayer = new SecurityLayer(this.logger);
     this.metricsCollector = new MetricsCollector();
+  }
+
+  private findSuperClaudePath(): string {
+    const possiblePaths = [
+      path.join(process.cwd(), 'SuperClaude'),
+      path.join(process.cwd(), '..', 'SuperClaude'),
+      path.join(process.env.HOME || '', 'SuperClaude'),
+      path.join(__dirname, '..', '..', '..', 'SuperClaude')
+    ];
+
+    for (const p of possiblePaths) {
+      try {
+        if (require('fs').existsSync(p)) {
+          this.logger?.info(`Found SuperClaude at: ${p}`);
+          return p;
+        }
+      } catch {
+        // Continue searching
+      }
+    }
+
+    // Default path if not found
+    return path.join(process.cwd(), 'SuperClaude');
   }
 
   async initialize(): Promise<void> {
@@ -277,9 +301,11 @@ export class ExtensionManager {
   private async verifySuperClaude(): Promise<void> {
     try {
       await fs.access(this.superClaudePath);
-      this.logger.info('SuperClaude installation verified');
+      this.logger.info(`SuperClaude installation verified at: ${this.superClaudePath}`);
     } catch {
-      throw new Error('SuperClaude not found. Please run install script first.');
+      this.logger.warn('SuperClaude not found. Running in standalone mode.');
+      // Don't throw error - allow standalone operation
+      // throw new Error('SuperClaude not found. Please run install script first.');
     }
   }
 
