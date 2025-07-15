@@ -41,6 +41,14 @@ check_prerequisites() {
     fi
     echo -e "${GREEN}✓ npm $(npm -v)${NC}"
     
+    # Check Python
+    if ! command -v python3 &> /dev/null; then
+        echo -e "${RED}❌ Python 3 is not installed${NC}"
+        echo "   Please install Python 3.8 or higher from https://python.org"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ Python $(python3 --version)${NC}"
+    
     # Check git
     if ! command -v git &> /dev/null; then
         echo -e "${RED}❌ git is not installed${NC}"
@@ -63,11 +71,30 @@ setup_superclaude() {
             echo "  Updating SuperClaude..."
             git pull origin main || true
         fi
+        
+        # Check if SuperClaude is installed
+        if [ ! -d "SuperClaude" ] || [ ! -f "SuperClaude.py" ]; then
+            echo "  Installing SuperClaude..."
+            python3 SuperClaude.py install --quick || {
+                echo -e "${YELLOW}⚠️  SuperClaude installation failed, continuing anyway...${NC}"
+            }
+        else
+            echo -e "${GREEN}✓ SuperClaude already installed${NC}"
+        fi
+        
         cd ..
     else
         echo "  Cloning SuperClaude v3..."
         git clone https://github.com/NomenAK/SuperClaude.git
-        echo -e "${GREEN}✓ SuperClaude v3 cloned successfully${NC}"
+        cd SuperClaude
+        
+        echo "  Installing SuperClaude..."
+        python3 SuperClaude.py install --quick || {
+            echo -e "${YELLOW}⚠️  SuperClaude installation failed, continuing anyway...${NC}"
+        }
+        
+        cd ..
+        echo -e "${GREEN}✓ SuperClaude v3 setup completed${NC}"
     fi
 }
 

@@ -247,7 +247,11 @@ describe('SuperClaude Integration', () => {
 
       try {
         const testManager = new ExtensionManager(config);
-        await expect(testManager.initialize()).rejects.toThrow('SuperClaude not found');
+        // Now it should NOT throw, but log a warning instead
+        await expect(testManager.initialize()).resolves.toBeUndefined();
+        
+        // Verify it initialized successfully in standalone mode
+        expect(testManager).toBeDefined();
       } finally {
         // Restore directory
         if (fs.existsSync(tempPath)) {

@@ -69,6 +69,12 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 - Git
 - Claude CLI (Claude Code 설치)
 
+### SuperClaude 자동 설치
+설치 스크립트가 자동으로 SuperClaude를 설치합니다:
+- SuperClaude 리포지토리 클론
+- `python3 SuperClaude.py install --quick` 실행
+- 필요한 모든 의존성 설치
+
 ### 설치 방법 1: 전역 설치 (권장)
 
 ```bash
