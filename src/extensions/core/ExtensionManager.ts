@@ -10,6 +10,7 @@ import { SecurityLayer } from '../security/SecurityLayer';
 import { MetricsCollector } from '../../integrations/monitoring/MetricsCollector';
 import { createLogger } from '../../utils/logger';
 import { Config } from '../../types/config';
+import { normalizePersonaNames } from '../../utils/persona-mapping';
 
 export interface CommandOptions {
   personas?: string[];
@@ -312,7 +313,7 @@ export class ExtensionManager {
   private async buildExecutionContext(command: string, options: CommandOptions): Promise<any> {
     return {
       command,
-      personas: options.personas || [],
+      personas: normalizePersonaNames(options.personas || []),
       timestamp: Date.now(),
       user: process.env.USER,
       environment: process.env.SC_ENTERPRISE_ENV || 'development',

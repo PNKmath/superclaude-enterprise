@@ -155,6 +155,9 @@ sc-enterprise run '/sc:deploy prod' --level 3
 
 # 백엔드 강제 지정
 sc-enterprise run '/sc:analyze large-file.json' --backend gemini
+
+# 한글 명령어도 지원
+sc-enterprise run '/sc:분석 인증.js --보안검사' -p 보안,성능
 ```
 
 ### 충돌 해결 테스트
