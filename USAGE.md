@@ -15,14 +15,26 @@ sc-enterprise status
 📊 System Status:
 SuperClaude: ✓
 Gemini CLI: ✓
-Extensions: conflict-resolver, execution-levels, gemini-adapter, hooks-v4, learning-engine, security-layer
+Extensions: conflict-resolver, execution-levels, gemini-adapter, hooks-v4, learning-engine, security-layer, natural-language
 Active Hooks: 3
 Cache Hit Rate: 0%
 ```
 
 ### 2. 첫 번째 명령 실행
 
-간단한 파일 분석부터 시작해보세요:
+#### 방법 1: 자연어로 편하게 (NEW! 🆕)
+
+```bash
+# 한글로 자유롭게
+sc-enterprise natural "이 파일 보안 검사해줘" --execute
+sc-enterprise n "로그인 기능 구현" -e  # 단축 명령어
+
+# 영어로도 자유롭게
+sc-enterprise natural "check security issues in auth.js" --execute
+sc-enterprise n "optimize database performance" -e
+```
+
+#### 방법 2: 기존 명령어 사용
 
 ```bash
 # 단일 파일 분석
@@ -36,8 +48,14 @@ sc-enterprise run '/sc:analyze auth.js --security'
 
 ### 시나리오 1: 보안 취약점 검사
 
-새로운 인증 시스템을 구현하기 전에 보안 검토:
+#### 자연어로 편하게:
+```bash
+# 자연어로 요청
+sc-enterprise natural "auth 폴더의 보안 문제를 찾아줘" --execute
+sc-enterprise n "JWT 인증 시스템 안전하게 구현" -e
+```
 
+#### 또는 기존 명령어로:
 ```bash
 # 1. 기존 코드 보안 분석
 sc-enterprise run '/sc:analyze src/auth --security' -p security,qa
@@ -329,11 +347,64 @@ open http://localhost:3000/d/superclaude-enterprise
    git commit -F .git/COMMIT_ANALYSIS
    ```
 
+## 🆕 자연어 명령어 가이드
+
+### 지원되는 자연어 패턴
+
+SuperClaude Enterprise는 다양한 자연어 입력을 이해합니다:
+
+#### 분석/검사 요청
+```bash
+sc-enterprise n "이 코드 분석해줘" -e
+sc-enterprise n "보안 취약점 있나 확인" -e
+sc-enterprise n "코드 품질 검사" -e
+sc-enterprise n "버그 찾아줘" -e
+```
+
+#### 구현/개발 요청
+```bash
+sc-enterprise n "로그인 기능 만들어줘" -e
+sc-enterprise n "REST API 구현해줘" -e
+sc-enterprise n "회원가입 폼 추가" -e
+sc-enterprise n "데이터베이스 스키마 생성" -e
+```
+
+#### 개선/최적화 요청
+```bash
+sc-enterprise n "성능 개선해줘" -e
+sc-enterprise n "더 빠르게 만들어줘" -e
+sc-enterprise n "리팩토링 필요" -e
+sc-enterprise n "메모리 사용량 줄여줘" -e
+```
+
+### 자연어 처리 확인
+
+실행 전에 어떻게 해석되는지 확인:
+```bash
+# --execute 없이 실행하면 분석 결과만 표시
+sc-enterprise natural "복잡한 요청 내용"
+
+# 출력 예시:
+# Detected Command: implement
+# Confidence: 85%
+# Suggested Personas: backend, frontend, architect
+# Structured Command: /sc:implement [your request]
+```
+
+### 명령어 제안 받기
+
+부분 입력으로 제안 받기:
+```bash
+sc-enterprise suggest "보안"
+# 출력: 관련 명령어 제안 목록
+```
+
 ## 🎓 다음 단계
 
 1. **고급 설정 커스터마이징**: `config/` 디렉토리의 YAML 파일 수정
 2. **커스텀 Hook 작성**: `extensions/hooks-v4/custom/` 디렉토리 활용
 3. **팀 프로필 생성**: 팀별 최적화된 설정 공유
 4. **플러그인 개발**: 조직 특화 기능 추가
+5. **자연어 패턴 확장**: `src/utils/command-matcher.ts` 커스터마이징
 
 더 자세한 정보는 [Architecture.md](Architecture.md)와 [API 문서](docs/api/)를 참고하세요.

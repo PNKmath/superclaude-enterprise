@@ -51,6 +51,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - License (MIT)
 
+## [1.1.0] - 2024-01-16
+
+### Added
+- Natural language command processing with Korean/English support
+- Intelligent command matching with confidence scoring
+- Automatic persona recommendation based on input context
+- Command suggestion system for partial inputs
+- Korean persona name mapping (보안, 아키텍트, 성능, etc.)
+- New CLI commands: `natural` (alias: `n`) and `suggest`
+- Claude Code hook for natural language processing
+- Comprehensive Korean command examples documentation
+
+### Fixed
+- Global installation issues with missing bin configuration
+- TypeScript compilation errors with unused imports
+- Module resolution errors for global command execution
+- SuperClaude repository URL in installation script
+
+### Improved
+- Installation process now more flexible with SuperClaude path detection
+- Better error handling for standalone operation without SuperClaude
+- Enhanced documentation with natural language examples
+
 ## [Unreleased]
 
 ### Planned

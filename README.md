@@ -28,29 +28,35 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 
 ## 🚀 주요 기능
 
-### 1. **지능형 페르소나 충돌 해결**
+### 1. **자연어 명령어 처리** 🆕
+- 정확한 명령어를 몰라도 자유롭게 입력
+- 한글/영어 모두 지원
+- 자동 명령어 매칭 및 페르소나 추천
+- 예: `/sc: 보안 검사해줘`, `/sc: make login feature`
+
+### 2. **지능형 페르소나 충돌 해결**
 - 9개 페르소나 간 자동 우선순위 조정
 - 컨텍스트 기반 동적 가중치
 - 협상 엔진을 통한 최적 결정
 
-### 2. **Gemini CLI 통합**
+### 3. **Gemini CLI 통합**
 - 자동 백엔드 선택 (Claude/Gemini)
 - 비용 최적화 (최대 50% 절감)
 - 1M 토큰 대용량 컨텍스트 지원
 
-### 3. **5단계 실행 레벨**
+### 4. **5단계 실행 레벨**
 - Silent (0) → Auto-execute (4)
 - 컨텍스트 기반 자동 레벨 결정
 - 프로덕션 환경 안전 장치
 
-### 4. **Claude Code Hooks 완전 통합**
+### 5. **Claude Code Hooks 완전 통합**
 - PreToolUse, PostToolUse, Notification, Stop hooks 지원
 - 자동 포맷팅, 테스트, 보안 검증
 - Git hooks 자동 통합
 - IDE 저장 시 즉시 분석
 - 배치 처리 및 캐싱으로 성능 최적화
 
-### 5. **학습 엔진**
+### 6. **학습 엔진**
 - 사용 패턴 자동 학습
 - 팀별 최적화 제안
 - 개인정보 보호 우선
@@ -158,6 +164,10 @@ sc-enterprise run '/sc:analyze large-file.json' --backend gemini
 
 # 한글 명령어도 지원
 sc-enterprise run '/sc:분석 인증.js --보안검사' -p 보안,성능
+
+# 자연어 명령어 (NEW!)
+sc-enterprise natural "로그인 기능 만들어줘" --execute
+sc-enterprise n "보안 취약점 검사" -e  # 단축 명령어
 ```
 
 ### 충돌 해결 테스트
