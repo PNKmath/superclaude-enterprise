@@ -124,6 +124,21 @@ build_extension() {
     echo -e "${GREEN}✓ Build completed${NC}"
 }
 
+# Check optional dependencies
+check_optional_dependencies() {
+    echo -e "\n${YELLOW}Checking optional dependencies...${NC}"
+    
+    # Check Gemini CLI
+    if command -v gemini &> /dev/null; then
+        echo -e "${GREEN}✓ Gemini CLI detected - cost optimization available${NC}"
+    else
+        echo -e "${YELLOW}ℹ️  Gemini CLI not found${NC}"
+        echo "   To enable cost-optimized processing for large files:"
+        echo "   pip install google-generativeai"
+        echo "   This is optional - SuperClaude Enterprise will work without it"
+    fi
+}
+
 # Setup configuration
 setup_configuration() {
     echo -e "\n${YELLOW}Setting up configuration...${NC}"
@@ -228,6 +243,7 @@ main() {
     setup_configuration
     setup_hooks
     setup_global_command
+    check_optional_dependencies
     run_tests
     
     echo -e "\n${GREEN}🎉 Installation completed successfully!${NC}"

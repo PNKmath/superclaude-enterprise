@@ -81,6 +81,21 @@ sc-enterprise test-routing '/sc:analyze' -f "src/" -s "5MB"
 # Output: Selected Backend: gemini (Reason: Large context size)
 ```
 
+#### Gemini 자동 선택 조건:
+- 파일 크기 > 100KB
+- 파일 개수 > 10개
+- 전체 컨텍스트 > 100KB
+- `--cost-sensitive` 플래그 사용 시
+
+#### 수동 백엔드 지정:
+```bash
+# Claude 강제 사용 (높은 품질)
+sc-enterprise run '/sc:analyze critical-code.js' --backend claude
+
+# Gemini 강제 사용 (비용 절감)
+sc-enterprise run '/sc:analyze large-dataset.json' --backend gemini
+```
+
 ### 시나리오 3: 팀 협업 시나리오
 
 여러 개발자가 동시에 작업할 때:
