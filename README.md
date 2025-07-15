@@ -8,6 +8,24 @@ An advanced enterprise extension for SuperClaude v3 that provides intelligent pe
 
 엔터프라이즈급 AI 개발 플랫폼 - SuperClaude의 강력한 확장
 
+## 🚀 Quick Start
+
+```bash
+# 1. 클론 및 설치
+git clone https://github.com/PNKmath/superclaude-enterprise.git
+cd superclaude-enterprise
+./install-enterprise.sh
+
+# 2. 프로젝트에서 hooks 설정
+cd /your/project
+mkdir -p .claude
+cp /path/to/superclaude-enterprise/.claude/hooks/typescript-project.json .claude/settings.json
+
+# 3. 사용 시작
+superclaude-enterprise hooks  # 활성 hooks 확인
+superclaude-enterprise run "/sc:analyze" -p security,architect
+```
+
 ## 🚀 주요 기능
 
 ### 1. **지능형 페르소나 충돌 해결**
@@ -45,109 +63,83 @@ An advanced enterprise extension for SuperClaude v3 that provides intelligent pe
 - Git
 - Claude CLI (Claude Code 설치)
 
-### 빠른 설치
+### 설치 방법 1: 전역 설치 (권장)
 
 ```bash
-# 1. 저장소 클론
-git clone https://github.com/your-org/superclaude-enterprise.git
+# 1. 원하는 위치에 클론
+git clone https://github.com/PNKmath/superclaude-enterprise.git
 cd superclaude-enterprise
 
 # 2. 설치 스크립트 실행
-./scripts/install-enterprise.sh
+./install-enterprise.sh
 
-# 3. PATH 설정 (필요시)
-export PATH="$HOME/.local/bin:$PATH"
+# 3. 이제 어느 프로젝트에서나 사용 가능
+superclaude-enterprise --help
 ```
 
-### 수동 설치
+### 설치 방법 2: 프로젝트별 설치
 
 ```bash
-# 1. SuperClaude 설치
-git clone https://github.com/NomenAK/SuperClaude.git
-cd SuperClaude
-python3 SuperClaude.py install --quick
-cd ..
+# 1. 프로젝트 디렉토리로 이동
+cd my-project
 
-# 2. 의존성 설치
-npm install
+# 2. 프로젝트 내부에 클론
+git clone https://github.com/PNKmath/superclaude-enterprise.git
+cd superclaude-enterprise
 
-# 3. 빌드
-npm run build
+# 3. 설치
+./install-enterprise.sh
 
-# 4. 설치
-mkdir -p ~/.claude/enterprise
-cp -r dist/* ~/.claude/enterprise/
+# 4. 프로젝트 내에서 사용
+./bin/superclaude-enterprise --help
 ```
-  1. 독립적으로 설치 (권장)
 
-  #### 원하는 위치에 클론
-  git clone https://github.com/PNKmath/superclaude-enterprise.git
-  cd superclaude-enterprise
+### Claude Code Hooks 설정
 
-  #### 설치 스크립트 실행
-  ./install-enterprise.sh
+각 프로젝트에서 hooks를 사용하려면:
 
-  #### 전역 명령어로 사용
-  superclaude-enterprise --help
+```bash
+# 1. 프로젝트 루트로 이동
+cd /path/to/your/project
 
-  이 방법의 장점:
-  - 어느 프로젝트에서나 사용 가능
-  - 전역 명령어로 편리하게 사용
-  - 여러 프로젝트에서 공유
+# 2. .claude 디렉토리 생성
+mkdir -p .claude
 
-  2. 프로젝트 내부에 설치
+# 3-1. 기본 hooks 사용
+cp /path/to/superclaude-enterprise/.claude/settings.json .claude/
 
-  #### 프로젝트 디렉토리로 이동
-  cd my-project
+# 3-2. 또는 언어별 템플릿 사용
+cp /path/to/superclaude-enterprise/.claude/hooks/python-project.json .claude/settings.json
+# 또는
+cp /path/to/superclaude-enterprise/.claude/hooks/typescript-project.json .claude/settings.json
+```
 
-  #### 프로젝트 내부에 클론
-  git clone https://github.com/PNKmath/superclaude-enterprise.git
-  cd superclaude-enterprise
+### 프로젝트 구조
 
-  #### 설치
-  ./install-enterprise.sh
+```
+your-project/
+├── .claude/
+│   ├── settings.json         # 프로젝트 hooks (git에 포함)
+│   └── settings.local.json   # 개인 hooks (git에서 제외)
+├── src/
+├── tests/
+└── ...
+```
 
-  #### 프로젝트 내에서만 사용
-  ./bin/superclaude-enterprise --help
-
-  🔧 Claude Code Hooks 설정
-
-  설치 후, 현재 프로젝트에서 hooks를 사용하려면:
-
-  #### 프로젝트 루트로 이동
-  cd /path/to/your/project
-
-  #### .claude 디렉토리 생성
-  mkdir -p .claude
-
-  #### SuperClaude Enterprise의 기본 hooks 복사
-  cp /path/to/superclaude-enterprise/.claude/settings.json .claude/
-
-  #### 또는 특정 언어용 hooks 사용
-  cp /path/to/superclaude-enterprise/.claude/hooks/python-project.json .claude/settings.json
-
-  📁 프로젝트 구조 예시
-
-  my-project/
-  ├── .claude/
-  │   ├── settings.json         # 프로젝트 hooks
-  │   └── settings.local.json   # 개인 hooks (git 제외)
-  ├── src/
-  ├── tests/
-  └── package.json
-
-  🚀 사용 예시
-
-  #### 어느 프로젝트에서든 사용
-  cd /any/project
-  superclaude-enterprise hooks              # 활성 hooks 보기
-  superclaude-enterprise run "/sc:analyze"  # 명령 실행
-
-  #### Claude Code와 함께 사용
-  claude "파일을 수정해줘"  # hooks가 자동으로 실행됨
-
-  권장사항은 독립적으로 설치하는 것입니다. 그러면 모든 프로젝트에서 사용할 수 있고, 각 프로젝트마다 .claude/settings.json만 설정하면 됩니다.
 ## 🎯 사용법
+
+### 시작하기
+
+```bash
+# 전역 설치한 경우
+superclaude-enterprise --help
+
+# 프로젝트별 설치한 경우
+./path/to/superclaude-enterprise/bin/superclaude-enterprise --help
+
+# 별칭 설정 (선택사항)
+alias sc-enterprise="superclaude-enterprise"
+```
 
 ### 기본 명령어
 
