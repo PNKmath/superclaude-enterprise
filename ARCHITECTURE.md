@@ -114,23 +114,40 @@ enum ExecutionLevel {
 - User preferences
 - Risk assessment
 
-### 4. Hook System v4
+### 4. Hook System v4 (Claude Code Hooks)
 
-Advanced integration points:
+Full integration with Claude Code's hook system:
 
 ```typescript
-interface HookSystem {
-  preCommand: (command: string, context: any) => Promise<ModifiedCommand>;
-  postCommand: (result: any, context: any) => Promise<void>;
-  backendSelect: (context: any) => Promise<BackendChoice>;
+enum HookEvent {
+  PRE_TOOL_USE = 'PreToolUse',
+  POST_TOOL_USE = 'PostToolUse',
+  NOTIFICATION = 'Notification',
+  STOP = 'Stop',
+  SUBAGENT_STOP = 'SubagentStop'
+}
+
+interface HookManager {
+  executeHooks(event: HookEvent, context: HookContext): Promise<HookResult[]>;
+  shouldBlockTool(context: HookContext): Promise<{ block: boolean; reason?: string }>;
+  shouldContinue(context: HookContext): Promise<{ continue: boolean; reason?: string }>;
 }
 ```
 
+**Hook Types:**
+- **PreToolUse**: Input validation, dangerous command blocking
+- **PostToolUse**: Auto-formatting, testing, logging
+- **Notification**: Custom alerts, team notifications
+- **Stop**: Completion validation, force continuation
+
 **Features:**
-- Batch processing for efficiency
-- Debouncing to prevent floods
-- Caching for repeated operations
-- Async execution with timeouts
+- Multi-source configuration (user, project, local)
+- Environment variable passing
+- Parallel execution
+- Background hooks
+- Exit code control
+- JSON response parsing
+- Timeout management
 
 ### 5. Learning Engine
 

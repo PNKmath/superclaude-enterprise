@@ -127,13 +127,50 @@ setup_configuration() {
 
 # Setup hooks
 setup_hooks() {
-    echo -e "\n${YELLOW}Setting up SuperClaude hooks...${NC}"
+    echo -e "\n${YELLOW}Setting up hooks...${NC}"
     
+    # Setup SuperClaude integration hooks
     if [ -f "scripts/setup-superclaude-hooks.sh" ]; then
         ./scripts/setup-superclaude-hooks.sh
     else
-        echo -e "${YELLOW}⚠️  Hook setup script not found, skipping...${NC}"
+        echo -e "${YELLOW}⚠️  SuperClaude hook setup script not found, skipping...${NC}"
     fi
+    
+    # Setup Claude Code hooks
+    echo -e "\n${YELLOW}Setting up Claude Code hooks...${NC}"
+    
+    # Create .claude directory if it doesn't exist
+    if [ ! -d ".claude" ]; then
+        mkdir -p .claude
+        echo -e "${GREEN}✓ Created .claude directory${NC}"
+    fi
+    
+    # Copy default settings if not exists
+    if [ ! -f ".claude/settings.json" ]; then
+        echo "  Creating default hook configuration..."
+        # Check if template exists, otherwise use the one we created
+        if [ -f ".claude/settings.json.template" ]; then
+            cp .claude/settings.json.template .claude/settings.json
+        else
+            echo "  Using built-in hook configuration..."
+        fi
+        echo -e "${GREEN}✓ Hook configuration created${NC}"
+    else
+        echo -e "${GREEN}✓ Hook configuration already exists${NC}"
+    fi
+    
+    # Create local settings template if not exists
+    if [ ! -f ".claude/settings.local.json" ] && [ -f ".claude/settings.local.json.template" ]; then
+        echo "  Creating local settings template..."
+        cp .claude/settings.local.json.template .claude/settings.local.json
+        echo -e "${GREEN}✓ Local settings template created${NC}"
+    fi
+    
+    # Create user hooks directory if it doesn't exist
+    mkdir -p ~/.claude 2>/dev/null || true
+    
+    echo -e "${GREEN}✓ Claude Code hooks configured${NC}"
+    echo "  Hook examples available in: .claude/hooks/"
 }
 
 # Create global command
@@ -180,8 +217,14 @@ main() {
     echo -e "\n${GREEN}🎉 Installation completed successfully!${NC}"
     echo -e "\n${YELLOW}Next steps:${NC}"
     echo "1. Edit config/enterprise.config.json to customize settings"
-    echo "2. Run 'superclaude-enterprise test' to verify installation"
-    echo "3. Use 'superclaude-enterprise --help' to see available commands"
+    echo "2. Review Claude Code hooks: superclaude-enterprise hooks"
+    echo "3. Run 'superclaude-enterprise test' to verify installation"
+    echo "4. Use 'superclaude-enterprise --help' to see available commands"
+    echo ""
+    echo -e "${YELLOW}Hook Configuration:${NC}"
+    echo "  - Project hooks: .claude/settings.json"
+    echo "  - Local hooks: .claude/settings.local.json"
+    echo "  - Example hooks: .claude/hooks/*.json"
     echo -e "\n${BLUE}Happy coding with SuperClaude Enterprise! 🚀${NC}"
 }
 

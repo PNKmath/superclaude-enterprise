@@ -1,0 +1,45 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "edit_file"
+        },
+        "command": "git add $CLAUDE_FILE_PATHS 2>/dev/null || true"
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["*.md", "docs/**/*"]
+        },
+        "command": "echo '📝 Documentation updated: $CLAUDE_FILE_PATHS' | tee -a .claude/team-activity.log"
+      }
+    ],
+    "Notification": [
+      {
+        "command": "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"Claude: $CLAUDE_NOTIFICATION\"}' $SLACK_WEBHOOK_URL 2>/dev/null || echo '$CLAUDE_NOTIFICATION'"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "git diff --staged --stat && echo 'Changes staged for commit'"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "git push"
+        },
+        "command": "git pull --rebase && echo 'Synced with remote before push'"
+      }
+    ]
+  },
+  "enterprise": {
+    "team_features": {
+      "auto_stage_changes": true,
+      "notify_on_completion": true,
+      "sync_before_push": true
+    }
+  }
+}

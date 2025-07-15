@@ -25,7 +25,9 @@ An advanced enterprise extension for SuperClaude v3 that provides intelligent pe
 - 컨텍스트 기반 자동 레벨 결정
 - 프로덕션 환경 안전 장치
 
-### 4. **고급 Hook 시스템**
+### 4. **Claude Code Hooks 완전 통합**
+- PreToolUse, PostToolUse, Notification, Stop hooks 지원
+- 자동 포맷팅, 테스트, 보안 검증
 - Git hooks 자동 통합
 - IDE 저장 시 즉시 분석
 - 배치 처리 및 캐싱으로 성능 최적화
@@ -149,6 +151,29 @@ sc-enterprise insights --team backend-team
 # 1. Consider using '/sc:test' before deployments
 # 2. 'security' persona usage increased 40% - good practice!
 ```
+
+## 🪝 Claude Code Hooks
+
+### Hook 설정 확인
+
+```bash
+# 활성 hooks 보기
+sc-enterprise hooks
+```
+
+### 기본 제공 Hooks
+
+1. **보안 차단**: 위험한 명령어 자동 차단
+2. **자동 포맷팅**: Python (black, ruff), TypeScript (prettier, eslint)
+3. **충돌 검사**: 페르소나 충돌 자동 확인
+4. **테스트 실행**: 변경된 파일 관련 테스트 자동 실행
+
+### Hook 설정 파일
+- `.claude/settings.json` - 프로젝트 hooks
+- `.claude/settings.local.json` - 개인 hooks
+- `~/.claude/settings.json` - 전역 hooks
+
+자세한 내용은 [HOOKS.md](HOOKS.md) 참조
 
 ## ⚙️ 설정
 

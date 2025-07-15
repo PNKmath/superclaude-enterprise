@@ -13,7 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 5 resolution strategies: VETO_OVERRIDE, PRIORITY_BASED, NEGOTIATION, SEQUENTIAL_ACCESS, WEIGHTED_CONSENSUS
 - Gemini CLI integration for automatic backend routing
 - 5-level execution control system (Silent to Auto-block)
-- Advanced Hook System v4 with pre-command, post-command, and backend selection hooks
+- Advanced Hook System v4 with full Claude Code hooks integration
+  - PreToolUse hooks for validation and blocking dangerous commands
+  - PostToolUse hooks for auto-formatting and testing
+  - Notification hooks for custom alerts
+  - Stop hooks for completion validation
+  - Multi-source configuration (user, project, local)
+  - Hook examples for Python, TypeScript, security, and team workflows
 - Learning Engine with privacy-preserving pattern recognition
 - Security Layer with credential masking and audit logging
 - Context Analyzer for environment-aware persona weighting

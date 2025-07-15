@@ -1,0 +1,60 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["*.ts", "*.tsx", "src/**/*.ts", "src/**/*.tsx"]
+        },
+        "command": "prettier --write $CLAUDE_FILE_PATHS && eslint --fix $CLAUDE_FILE_PATHS"
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["*.test.ts", "*.spec.ts", "**/*.test.tsx", "**/*.spec.tsx"]
+        },
+        "command": "npm test -- --findRelatedTests $CLAUDE_FILE_PATHS",
+        "run_in_background": true
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["src/**/*.ts", "src/**/*.tsx"]
+        },
+        "command": "npx tsc --noEmit",
+        "run_in_background": true
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "npm publish"
+        },
+        "command": "echo 'BLOCKED: npm publish requires manual approval' >&2 && exit 2"
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["package.json"]
+        },
+        "command": "echo '⚠️  Modifying package.json - dependencies will need to be reinstalled'"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["package.json"]
+        },
+        "command": "npm install",
+        "run_in_background": true
+      }
+    ],
+    "Stop": [
+      {
+        "command": "npm run lint && npm test || (echo 'Linting and tests must pass' >&2 && exit 2)"
+      }
+    ]
+  }
+}

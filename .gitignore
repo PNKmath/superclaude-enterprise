@@ -51,9 +51,14 @@ Thumbs.db
 
 # SuperClaude specific
 SuperClaude/
-.claude/
 config/enterprise.config.json
 !config/enterprise.config.default.json
+
+# Claude Code hooks
+.claude/settings.local.json
+!.claude/settings.json
+!.claude/settings.local.json.template
+!.claude/hooks/
 
 # Cache
 .cache/

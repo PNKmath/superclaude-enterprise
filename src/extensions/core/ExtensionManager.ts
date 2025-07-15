@@ -4,7 +4,7 @@ import * as fs from 'fs/promises';
 import { ConflictResolver } from '../conflict-resolver/ConflictResolver';
 import { GeminiAdapter } from '../../integrations/gemini-cli/GeminiAdapter';
 import { ExecutionLevelManager } from '../execution-levels/ExecutionLevelManager';
-import { HookManager } from '../hooks-v4/HookManager';
+import { HookManager, HookEvent, HookContext } from '../hooks-v4/HookManager';
 import { LearningEngine } from '../learning-engine/LearningEngine';
 import { SecurityLayer } from '../security/SecurityLayer';
 import { MetricsCollector } from '../../integrations/monitoring/MetricsCollector';
@@ -31,7 +31,7 @@ export class ExtensionManager {
   private conflictResolver: ConflictResolver;
   public geminiAdapter: GeminiAdapter;
   private executionLevels: ExecutionLevelManager;
-  private hookManager: HookManager;
+  public hookManager: HookManager;
   private learningEngine: LearningEngine;
   private securityLayer: SecurityLayer;
   private metricsCollector: MetricsCollector;
@@ -83,11 +83,34 @@ export class ExtensionManager {
       typeof p === 'string' ? { name: p } : p
     );
     
+    // Execute PreToolUse hooks
+    const hookContext: HookContext = {
+      command,
+      personas: personas,
+      tool_name: 'process_command',
+      tool_input: command
+    };
+    
+    const blockResult = await this.hookManager.shouldBlockTool(hookContext);
+    if (blockResult.block) {
+      return {
+        success: false,
+        error: blockResult.reason,
+        blocked: true
+      };
+    }
+    
     const resolvedContext = await this.conflictResolver.resolve(
       command,
       personaObjects,
       { ...context, command }
     );
+    
+    // Execute PostToolUse hooks
+    await this.hookManager.executeHooks(HookEvent.POST_TOOL_USE, {
+      ...hookContext,
+      tool_response: resolvedContext
+    });
     
     return {
       success: true,

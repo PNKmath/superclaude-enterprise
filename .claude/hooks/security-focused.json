@@ -1,0 +1,53 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "rm -rf"
+        },
+        "command": "echo 'BLOCKED: Dangerous rm -rf command' >&2 && exit 2"
+      },
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "curl"
+        },
+        "command": "echo 'Reviewing curl command for security...' && echo \"Command: $CLAUDE_TOOL_INPUT\" && read -p 'Allow? (y/n) ' -n 1 -r && echo && [[ $REPLY =~ ^[Yy]$ ]]"
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": [".env", "*.key", "*.pem", "secrets/*", "credentials.json", ".git/*"]
+        },
+        "command": "echo 'BLOCKED: Cannot modify sensitive files' >&2 && exit 2"
+      },
+      {
+        "matcher": {
+          "tool_name": "read_file",
+          "file_paths": ["*.key", "*.pem", "id_rsa*"]
+        },
+        "command": "echo 'WARNING: Reading sensitive file' >&2"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "edit_file"
+        },
+        "command": "grep -E '(password|api_key|secret|token)\\s*=\\s*[\"\\x27]' $CLAUDE_FILE_PATHS && echo 'WARNING: Potential secrets detected in files' >&2 || true"
+      },
+      {
+        "matcher": {
+          "tool_name": "bash"
+        },
+        "command": "echo \"$(date): $CLAUDE_TOOL_INPUT\" >> ~/.claude/audit.log"
+      }
+    ],
+    "Notification": [
+      {
+        "command": "echo \"$(date): $CLAUDE_NOTIFICATION\" >> ~/.claude/notifications.log"
+      }
+    ]
+  }
+}

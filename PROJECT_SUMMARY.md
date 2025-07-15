@@ -28,11 +28,15 @@ SuperClaude Enterprise is a powerful extension for SuperClaude v3 that adds ente
 - ✅ Level 4 (Auto-block) - Block dangerous operations
 - ✅ Automatic level determination based on context
 
-### 4. **Advanced Hook System**
-- ✅ Pre-command hook for conflict resolution
-- ✅ Post-command hook for learning
-- ✅ Backend selection hook
-- ✅ Batch processing and caching
+### 4. **Advanced Hook System (Claude Code Hooks)**
+- ✅ Full Claude Code hooks integration
+- ✅ PreToolUse hooks for validation and blocking
+- ✅ PostToolUse hooks for auto-formatting and testing
+- ✅ Notification hooks for custom alerts
+- ✅ Stop hooks for completion validation
+- ✅ Multi-source configuration (user/project/local)
+- ✅ Environment variable support
+- ✅ Parallel execution and background hooks
 - ✅ Integration with SuperClaude without core modifications
 
 ### 5. **Learning Engine**

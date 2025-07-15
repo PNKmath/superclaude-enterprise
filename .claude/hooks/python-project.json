@@ -1,0 +1,42 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["*.py"]
+        },
+        "command": "echo '🐍 Auto-formatting Python files...' && black $CLAUDE_FILE_PATHS && ruff check --fix $CLAUDE_FILE_PATHS"
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["*.py", "tests/*.py"]
+        },
+        "command": "pytest -xvs --tb=short",
+        "run_in_background": true
+      },
+      {
+        "matcher": {
+          "tool_name": "create_file",
+          "file_paths": ["*.py"]
+        },
+        "command": "echo '# -*- coding: utf-8 -*-' | cat - $CLAUDE_FILE_PATHS > temp && mv temp $CLAUDE_FILE_PATHS"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "pip install"
+        },
+        "command": "echo '📦 Package installation requires review' && read -p 'Continue? (y/n) ' -n 1 -r && echo && [[ $REPLY =~ ^[Yy]$ ]]"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "pytest --tb=short || (echo 'Tests must pass before completing' >&2 && exit 2)"
+      }
+    ]
+  }
+}

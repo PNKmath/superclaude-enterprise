@@ -1,0 +1,86 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "rm -rf"
+        },
+        "command": "echo 'BLOCKED: Dangerous rm -rf command detected by SuperClaude Enterprise' >&2 && exit 2"
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": [".env", "*.key", "*.pem", "secrets/*", ".git/*"]
+        },
+        "command": "echo 'BLOCKED: Access to sensitive files not allowed' >&2 && exit 2"
+      },
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "--skip-validation"
+        },
+        "command": "superclaude-enterprise check-veto security --command \"$CLAUDE_TOOL_INPUT\""
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["*.py"]
+        },
+        "command": "echo 'Auto-formatting Python files...' && black $CLAUDE_FILE_PATHS 2>/dev/null && ruff check --fix $CLAUDE_FILE_PATHS 2>/dev/null || true"
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["*.ts", "*.tsx", "*.js", "*.jsx"]
+        },
+        "command": "echo 'Auto-formatting TypeScript/JavaScript files...' && prettier --write $CLAUDE_FILE_PATHS 2>/dev/null && eslint --fix $CLAUDE_FILE_PATHS 2>/dev/null || true"
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["src/**/*.ts", "tests/**/*.ts"]
+        },
+        "command": "superclaude-enterprise conflict-check --files \"$CLAUDE_FILE_PATHS\" --personas architect,performance",
+        "run_in_background": true
+      },
+      {
+        "matcher": {
+          "tool_name": "edit_file",
+          "file_paths": ["*.test.ts", "*.test.js", "*.spec.ts", "*.spec.js"]
+        },
+        "command": "npm test -- --findRelatedTests $CLAUDE_FILE_PATHS 2>/dev/null || true",
+        "run_in_background": true
+      }
+    ],
+    "Notification": [
+      {
+        "command": "superclaude-enterprise log-notification \"$CLAUDE_NOTIFICATION\""
+      }
+    ],
+    "Stop": [
+      {
+        "command": "superclaude-enterprise validate-completion --check-tests --check-lint"
+      }
+    ]
+  },
+  "enterprise": {
+    "conflict_resolution": {
+      "enabled": true,
+      "auto_resolve": true,
+      "log_conflicts": true
+    },
+    "gemini_integration": {
+      "enabled": true,
+      "auto_route": true,
+      "cost_threshold": 0.10
+    },
+    "execution_levels": {
+      "default": 2,
+      "dangerous_commands": 3,
+      "production_changes": 4
+    }
+  }
+}

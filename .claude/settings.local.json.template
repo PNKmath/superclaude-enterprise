@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool_name": "edit_file"
+        },
+        "command": "echo 'File edited: $CLAUDE_FILE_PATHS' >> ~/.claude/activity.log"
+      }
+    ],
+    "Notification": [
+      {
+        "command": "notify-send 'SuperClaude Enterprise' '$CLAUDE_NOTIFICATION' || echo '$CLAUDE_NOTIFICATION'"
+      }
+    ]
+  },
+  "enterprise": {
+    "user_preferences": {
+      "preferred_personas": ["architect", "security"],
+      "auto_test": true,
+      "verbose_logging": false
+    }
+  }
+}

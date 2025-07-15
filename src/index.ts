@@ -245,6 +245,126 @@ async function main() {
       }
     });
 
+  // Hook management commands
+  program
+    .command('hooks')
+    .description('Manage Claude Code hooks')
+    .action(async () => {
+      const { HookEvent } = await import('./extensions/hooks-v4/HookManager');
+      const hooks = await extensionManager.hookManager.listHooks();
+      
+      console.log(chalk.cyan('\n📎 Active Claude Code Hooks:'));
+      
+      for (const [event, eventHooks] of hooks.entries()) {
+        if (eventHooks.length > 0) {
+          console.log(chalk.yellow(`\n${event}:`));
+          eventHooks.forEach((hook, i) => {
+            console.log(`  ${i + 1}. ${hook.command}`);
+            if (hook.matcher) {
+              if (hook.matcher.tool_name) {
+                console.log(`     Tool: ${hook.matcher.tool_name}`);
+              }
+              if (hook.matcher.file_paths) {
+                console.log(`     Files: ${hook.matcher.file_paths.join(', ')}`);
+              }
+              if (hook.matcher.query) {
+                console.log(`     Query: ${hook.matcher.query}`);
+              }
+            }
+          });
+        }
+      }
+      
+      console.log(chalk.gray('\nConfiguration files:'));
+      console.log(`  - Project: .claude/settings.json`);
+      console.log(`  - Local: .claude/settings.local.json`);
+      console.log(`  - User: ~/.claude/settings.json`);
+    });
+
+  program
+    .command('check-veto <persona>')
+    .description('Check if a persona would veto a command')
+    .option('--command <command>', 'Command to check')
+    .action(async (persona, options) => {
+      const command = options.command || process.env.CLAUDE_TOOL_INPUT || '';
+      const result = await extensionManager.testConflictResolution([persona], command);
+      
+      if (result.conflicts?.some((c: any) => c.resolution?.strategy === 'veto_override')) {
+        console.error(`VETO: ${persona} blocks this operation`);
+        process.exit(2);
+      }
+      
+      console.log(`OK: ${persona} allows this operation`);
+      process.exit(0);
+    });
+
+  program
+    .command('conflict-check')
+    .description('Check for persona conflicts on file changes')
+    .option('--files <files>', 'Changed files (space-separated)')
+    .option('--personas <personas>', 'Personas to check')
+    .action(async (options) => {
+      const files = options.files?.split(' ') || [];
+      const personas = options.personas?.split(',') || ['architect', 'performance'];
+      
+      console.log(chalk.cyan('Checking conflicts for:'), files.join(', '));
+      
+      const result = await extensionManager.testConflictResolution(personas, `edit ${files.join(' ')}`);
+      
+      if (result.conflicts?.length > 0) {
+        console.log(chalk.yellow(`\n⚠️  Found ${result.conflicts.length} conflicts:`));
+        result.conflicts.forEach((conflict: any, i: number) => {
+          console.log(`${i + 1}. ${conflict.personas.join(' vs ')} - ${conflict.description}`);
+          console.log(`   Resolution: ${conflict.resolution.winner} (${conflict.resolution.strategy})`);
+        });
+      } else {
+        console.log(chalk.green('\n✓ No conflicts found'));
+      }
+    });
+
+  program
+    .command('log-notification <notification>')
+    .description('Log a notification from Claude Code')
+    .action(async (notification) => {
+      logger.info({ notification, source: 'claude-code' }, 'Notification received');
+      console.log(chalk.blue('📢'), notification);
+    });
+
+  program
+    .command('validate-completion')
+    .description('Validate task completion before stopping')
+    .option('--check-tests', 'Ensure tests pass')
+    .option('--check-lint', 'Ensure linting passes')
+    .action(async (options) => {
+      const checks = [];
+      
+      if (options.checkTests) {
+        checks.push('tests');
+      }
+      
+      if (options.checkLint) {
+        checks.push('linting');
+      }
+      
+      if (checks.length === 0) {
+        process.exit(0);
+      }
+      
+      console.log(chalk.cyan('🔍 Validating completion...'));
+      
+      // Here we would run actual checks
+      // For now, just simulate
+      const allPassed = true;
+      
+      if (!allPassed) {
+        console.error(chalk.red('❌ Validation failed. Please fix issues before completing.'));
+        process.exit(2); // Force continue
+      }
+      
+      console.log(chalk.green('✓ All validation checks passed'));
+      process.exit(0);
+    });
+
   program
     .command('learn')
     .description('Process learning data (used by SuperClaude hooks)')

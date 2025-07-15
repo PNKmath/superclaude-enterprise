@@ -126,6 +126,44 @@ sc-enterprise run '/sc:deploy prod' --level 3
 sc-enterprise run '/sc:fix --minor-issues' --level 4
 ```
 
+## 🪝 Claude Code Hooks 사용법
+
+### Hook 설정 확인
+```bash
+# 현재 활성화된 hooks 보기
+sc-enterprise hooks
+```
+
+### 페르소나 Veto 확인
+```bash
+# Security 페르소나가 명령을 차단하는지 확인
+sc-enterprise check-veto security --command "rm -rf /"
+```
+
+### 파일 변경 충돌 확인
+```bash
+# 파일 수정 시 페르소나 간 충돌 확인
+sc-enterprise conflict-check --files "api.ts db.ts" --personas "architect,performance"
+```
+
+### Hook 설정 커스터마이징
+```bash
+# 프로젝트 hooks 편집
+vim .claude/settings.json
+
+# 개인 hooks 편집 (git에서 제외됨)
+vim .claude/settings.local.json
+```
+
+### 예제 Hook 사용
+```bash
+# Python 프로젝트용 hooks 복사
+cp .claude/hooks/python-project.json .claude/settings.json
+
+# TypeScript 프로젝트용 hooks 복사
+cp .claude/hooks/typescript-project.json .claude/settings.json
+```
+
 ## 🤝 페르소나 조합 모범 사례
 
 ### 효과적인 조합
