@@ -412,6 +412,13 @@ sc-enterprise run '/sc:analyze' --dry-run
 
 MIT License - SuperClaude 라이선스 준수
 
+## 📚 추가 문서
+
+- [Claude Code 통합 가이드](CLAUDE_CODE_INTEGRATION.md) - Claude Code 내에서 사용하는 방법
+- [상세 사용법](USAGE.md) - 모든 기능의 상세 가이드
+- [아키텍처](ARCHITECTURE.md) - 시스템 구조와 설계
+- [프로젝트 요약](PROJECT_SUMMARY.md) - 기능 및 테스트 현황
+
 ## 🔗 관련 링크
 
 - [SuperClaude Original](https://github.com/NomenAK/SuperClaude)
