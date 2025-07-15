@@ -36,7 +36,7 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 - 정확한 명령어를 몰라도 자유롭게 입력
 - 한글/영어 모두 지원
 - 자동 명령어 매칭 및 페르소나 추천
-- 예: `/sc: 보안 검사해줘`, `/sc: make login feature`
+- MCP 서버를 통해 Claude Code에서 자연어로 요청
 
 ### 2. **지능형 페르소나 충돌 해결**
 - 9개 페르소나 간 자동 우선순위 조정

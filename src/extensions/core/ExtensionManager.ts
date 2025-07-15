@@ -86,7 +86,7 @@ export class ExtensionManager {
     // Set up event handlers for SuperClaude bridge
     this.superClaudeBridge.on('info', (msg) => this.logger.info(msg));
     this.superClaudeBridge.on('executing', (data) => this.logger.debug('Executing:', data));
-    this.superClaudeBridge.on('stdout', (data) => this.logger.trace(data));
+    this.superClaudeBridge.on('stdout', (data) => this.logger.debug(data));
     this.superClaudeBridge.on('stderr', (data) => this.logger.warn(data));
     this.superClaudeBridge.on('error', (error) => this.logger.error('Bridge error:', error));
     this.superClaudeBridge.on('completed', (result) => this.logger.info('Bridge completed:', result));
@@ -102,7 +102,8 @@ export class ExtensionManager {
       // Validate SuperClaude bridge
       const bridgeValid = await this.superClaudeBridge.validate();
       if (!bridgeValid) {
-        throw new Error('SuperClaude bridge validation failed');
+        this.logger.warn('SuperClaude bridge validation failed - running in standalone mode');
+        // Continue initialization in standalone mode instead of throwing
       }
       
       // Initialize all components
