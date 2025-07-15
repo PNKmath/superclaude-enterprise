@@ -19,9 +19,6 @@ cd superclaude-enterprise
 # 2. Claude Code MCP 서버 등록
 claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
 
-# 또는 더 안정적인 wrapper 사용 (권장)
-claude mcp add -s user superclaude-enterprise "$PWD/bin/mcp-server-wrapper.sh"
-
 # 3. Claude Code에서 자연어로 사용!
 # Claude Code에 자연어로 요청:
 "SuperClaude를 사용해서 보안 취약점을 검사해줘"

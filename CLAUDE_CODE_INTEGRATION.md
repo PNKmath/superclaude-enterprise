@@ -16,9 +16,6 @@ SuperClaude Enterprise는 Claude Code와 두 가지 방식으로 통합됩니다
 # SuperClaude Enterprise 디렉토리에서
 npm run build
 claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
-
-# 또는 더 안정적인 wrapper 사용 (권장)
-claude mcp add -s user superclaude-enterprise "$PWD/bin/mcp-server-wrapper.sh"
 ```
 
 2. **Claude Code 재시작**:

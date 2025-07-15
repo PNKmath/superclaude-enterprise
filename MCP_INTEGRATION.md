@@ -39,18 +39,6 @@ claude mcp list
 }
 ```
 
-**또는 더 안정적인 wrapper 사용 (권장):**
-```json
-{
-  "mcpServers": {
-    "superclaude-enterprise": {
-      "command": "${HOME}/project/CC_persona_based_system/SuperClaude-Enterprise/bin/mcp-server-wrapper.sh",
-      "args": [],
-      "env": {}
-    }
-  }
-}
-```
 
 ### 3. Claude Code 재시작
 
@@ -168,13 +156,7 @@ Claude: [resolve_persona_conflicts 도구를 호출하여 해결]
 
 ### Claude Code 재시작 후 MCP 서버가 연결되지 않음
 
-**해결책 1: Wrapper 스크립트 사용 (권장)**
-```bash
-claude mcp remove superclaude-enterprise
-claude mcp add -s user superclaude-enterprise "$PWD/bin/mcp-server-wrapper.sh"
-```
-
-**해결책 2: Claude Code 완전 재시작**
+**해결책: Claude Code 완전 재시작**
 ```bash
 pkill -f "claude"
 sleep 5

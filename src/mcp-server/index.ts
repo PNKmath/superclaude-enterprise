@@ -229,27 +229,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
-  console.error('Received SIGINT, shutting down gracefully...');
+  // Don't log to stderr in MCP mode
   healthCheck.stop();
   await server.close();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.error('Received SIGTERM, shutting down gracefully...');
+  // Don't log to stderr in MCP mode
   healthCheck.stop();
   await server.close();
   process.exit(0);
 });
 
 // Handle uncaught errors
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
+process.on('uncaughtException', () => {
+  // Log errors to file instead of stderr
   process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+process.on('unhandledRejection', () => {
+  // Log errors to file instead of stderr
   process.exit(1);
 });
 
@@ -257,26 +257,23 @@ process.on('unhandledRejection', (reason, promise) => {
 async function main() {
   const transport = new StdioServerTransport();
   
-  // Handle stdin/stdout errors
-  process.stdin.on('error', (error) => {
-    console.error('Stdin error:', error);
+  // Handle stdin/stdout errors silently
+  process.stdin.on('error', () => {
     process.exit(1);
   });
   
-  process.stdout.on('error', (error) => {
-    console.error('Stdout error:', error);
+  process.stdout.on('error', () => {
     process.exit(1);
   });
   
   // Handle stdin close
   process.stdin.on('close', () => {
-    console.error('Stdin closed, shutting down...');
     healthCheck.stop();
     process.exit(0);
   });
   
   await server.connect(transport);
-  console.error('SuperClaude Enterprise MCP server running...');
+  // Don't log to stderr - it interferes with MCP protocol
   
   // Start health check
   healthCheck.start();
@@ -285,7 +282,7 @@ async function main() {
   process.stdin.resume();
 }
 
-main().catch((error) => {
-  console.error('Server error:', error);
+main().catch(() => {
+  // Don't log to stderr - just exit with error code
   process.exit(1);
 });
