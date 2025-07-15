@@ -19,6 +19,9 @@ cd superclaude-enterprise
 # 2. Claude Code MCP 서버 등록
 claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
 
+# 또는 더 안정적인 wrapper 사용 (권장)
+claude mcp add -s user superclaude-enterprise "$PWD/bin/mcp-server-wrapper.sh"
+
 # 3. Claude Code에서 자연어로 사용!
 # Claude Code에 자연어로 요청:
 "SuperClaude를 사용해서 보안 취약점을 검사해줘"
@@ -37,6 +40,7 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 - 한글/영어 모두 지원
 - 자동 명령어 매칭 및 페르소나 추천
 - MCP 서버를 통해 Claude Code에서 자연어로 요청
+- **개선됨**: 자동 재시작 및 health check로 안정성 향상
 
 ### 2. **지능형 페르소나 충돌 해결**
 - 9개 페르소나 간 자동 우선순위 조정

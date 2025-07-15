@@ -16,6 +16,9 @@ SuperClaude Enterprise는 Claude Code와 두 가지 방식으로 통합됩니다
 # SuperClaude Enterprise 디렉토리에서
 npm run build
 claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
+
+# 또는 더 안정적인 wrapper 사용 (권장)
+claude mcp add -s user superclaude-enterprise "$PWD/bin/mcp-server-wrapper.sh"
 ```
 
 2. **Claude Code 재시작**:
@@ -213,6 +216,13 @@ tail -f ~/.claude/logs/hooks.log
 - **Hooks는 사용자 입력을 가로채지 않음**: Claude Code hooks는 도구 실행 시에만 작동
 - **자연어 처리는 MCP 서버로**: 사용자 입력의 자연어 처리는 MCP 서버 방식 사용
 - **두 방식은 상호 보완적**: MCP는 자연어 처리, Hooks는 도구 자동화
+
+## MCP 서버 안정성 개선사항
+
+- **Health Check 시스템**: 30초 이상 비활성 시 자동 재시작
+- **Graceful Shutdown**: 안전한 종료 처리로 데이터 손실 방지
+- **Auto-Restart Wrapper**: 크래시 시 최대 5회 자동 재시작
+- **개선된 에러 처리**: 예상치 못한 에러 자동 복구
 
 ## 추가 리소스
 

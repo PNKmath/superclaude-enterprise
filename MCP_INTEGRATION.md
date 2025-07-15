@@ -39,6 +39,19 @@ claude mcp list
 }
 ```
 
+**또는 더 안정적인 wrapper 사용 (권장):**
+```json
+{
+  "mcpServers": {
+    "superclaude-enterprise": {
+      "command": "${HOME}/project/CC_persona_based_system/SuperClaude-Enterprise/bin/mcp-server-wrapper.sh",
+      "args": [],
+      "env": {}
+    }
+  }
+}
+```
+
 ### 3. Claude Code 재시작
 
 MCP 서버 등록 후 Claude Code를 재시작해야 합니다:
@@ -130,7 +143,43 @@ Claude: [resolve_persona_conflicts 도구를 호출하여 해결]
 2. **명시적 요청**: "SuperClaude를 사용해서" 같은 명시적 요청이 도움이 됩니다
 3. **MCP 서버 상태**: 서버가 실행 중이어야 합니다
 
+## 🚀 MCP 서버 안정성 개선사항
+
+### Health Check 시스템
+- 30초 이상 활동이 없으면 자동 재시작
+- 모든 요청마다 health check ping으로 안정성 보장
+
+### Graceful Shutdown
+- SIGINT/SIGTERM 시그널 정상 처리
+- stdin 종료 시 깔끔한 종료
+- 리소스 정리 후 안전한 종료
+
+### Auto-Restart Wrapper
+- 최대 5회 자동 재시작 시도
+- Exponential backoff로 재시작 간격 증가
+- 로그 파일로 문제 추적 가능
+
+### 개선된 에러 처리
+- Uncaught exception 자동 처리
+- Unhandled rejection 캐치
+- stdin/stdout 에러 감지 및 복구
+
 ## 🐛 문제 해결
+
+### Claude Code 재시작 후 MCP 서버가 연결되지 않음
+
+**해결책 1: Wrapper 스크립트 사용 (권장)**
+```bash
+claude mcp remove superclaude-enterprise
+claude mcp add -s user superclaude-enterprise "$PWD/bin/mcp-server-wrapper.sh"
+```
+
+**해결책 2: Claude Code 완전 재시작**
+```bash
+pkill -f "claude"
+sleep 5
+claude
+```
 
 ### MCP 서버가 보이지 않음
 
