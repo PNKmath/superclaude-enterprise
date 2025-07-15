@@ -388,6 +388,58 @@ async function main() {
       }
     });
 
+  // Natural language command processor
+  program
+    .command('natural <input...>')
+    .alias('n')
+    .description('Process natural language commands and map to SuperClaude commands')
+    .option('-e, --execute', 'Execute the matched command')
+    .option('-p, --personas <personas...>', 'Override suggested personas')
+    .action(async (input, options) => {
+      const { parseNaturalCommand } = await import('./utils/command-matcher');
+      const userInput = input.join(' ');
+      
+      console.log(chalk.cyan('\n🤖 Natural Language Processor'));
+      console.log(chalk.gray('Input:'), userInput);
+      
+      const result = parseNaturalCommand(userInput);
+      
+      console.log(chalk.yellow('\n📊 Analysis Results:'));
+      console.log(chalk.white('Detected Command:'), chalk.green(result.detectedCommand));
+      console.log(chalk.white('Confidence:'), chalk.yellow(`${result.confidence}%`));
+      console.log(chalk.white('Suggested Personas:'), chalk.blue(result.suggestedPersonas.join(', ')));
+      console.log(chalk.white('Explanation:'), chalk.gray(result.explanation));
+      console.log(chalk.white('Structured Command:'), chalk.magenta(result.structuredCommand));
+      
+      if (options.execute) {
+        console.log(chalk.cyan('\n🚀 Executing command...'));
+        const personas = options.personas || result.suggestedPersonas;
+        
+        await extensionManager.executeCommand(result.structuredCommand, {
+          personas,
+          level: '2',
+          backend: 'auto',
+          conflictResolution: true
+        });
+      } else {
+        console.log(chalk.gray('\nTo execute this command, add --execute flag'));
+      }
+    });
+
+  // Command suggestion helper
+  program
+    .command('suggest <partial>')
+    .description('Get command suggestions based on partial input')
+    .action(async (partial) => {
+      const { suggestCommands } = await import('./utils/command-matcher');
+      const suggestions = suggestCommands(partial);
+      
+      console.log(chalk.cyan('\n💡 Command Suggestions:'));
+      suggestions.forEach(suggestion => {
+        console.log(chalk.white('  •'), suggestion);
+      });
+    });
+
   // Parse command line arguments
   program.parse(process.argv);
 

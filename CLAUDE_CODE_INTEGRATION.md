@@ -53,9 +53,72 @@ which superclaude-enterprise
 #### Stop Hooks
 - 작업 완료 시 테스트/린트 검증
 
-## 방법 2: 직접 명령어 실행
+## 방법 2: 자연어 명령어 처리 (NEW!)
 
-Claude Code 내에서 SuperClaude의 `/sc:` 명령어와 함께 사용:
+SuperClaude Enterprise의 자연어 처리 기능을 사용하면 정확한 명령어를 몰라도 됩니다:
+
+### 자연어 입력 예시
+
+```bash
+# 기존 방식 (정확한 명령어 필요)
+/sc:analyze auth.js --security
+
+# 새로운 방식 (자연어 입력)
+/sc: 이 파일의 보안 문제를 확인해줘
+/sc: auth.js 보안 검사
+/sc: 인증 파일에 취약점이 있는지 봐줘
+```
+
+### 자동 명령어 매칭
+
+입력한 내용을 분석해서:
+1. 가장 적합한 명령어 자동 선택
+2. 관련 페르소나 자동 추천
+3. 명령어 구조화
+
+### 설정 방법
+
+`.claude/settings.json`에 추가:
+```json
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": {
+        "tool_name": "bash",
+        "query": "/sc:"
+      },
+      "command": "superclaude-enterprise natural \"$CLAUDE_TOOL_INPUT\" --execute"
+    }]
+  }
+}
+```
+
+### 지원되는 자연어 패턴
+
+**분석/검사:**
+- "보안 검사해줘"
+- "코드 분석 필요"
+- "취약점 찾아줘"
+- "문제점 확인"
+
+**구현/개발:**
+- "로그인 기능 만들어줘"
+- "API 엔드포인트 추가"
+- "새 기능 구현"
+
+**개선/최적화:**
+- "성능 개선 필요"
+- "더 빠르게 만들어줘"
+- "리팩토링 해줘"
+
+**디버깅:**
+- "버그 찾아줘"
+- "왜 안 되는지 봐줘"
+- "에러 해결"
+
+## 방법 3: 기존 명령어 직접 실행
+
+Claude Code 내에서 SuperClaude의 정해진 `/sc:` 명령어 사용:
 
 ### 예제 1: 보안 분석
 ```bash

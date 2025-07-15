@@ -1,0 +1,29 @@
+{
+  "description": "Natural language command processing for Claude Code",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": {
+          "tool_name": "bash",
+          "query": "/sc:"
+        },
+        "command": "superclaude-enterprise natural \"$CLAUDE_TOOL_INPUT\" --execute",
+        "description": "Process natural language /sc: commands"
+      }
+    ]
+  },
+  "examples": [
+    {
+      "input": "/sc: 이 파일의 보안 취약점을 찾아줘",
+      "output": "Detected: /sc:analyze [file] --security with personas: security, analyzer"
+    },
+    {
+      "input": "/sc: 로그인 기능 만들어줘",
+      "output": "Detected: /sc:implement login feature with personas: backend, frontend, security"
+    },
+    {
+      "input": "/sc: 데이터베이스 쿼리 속도 개선해줘",
+      "output": "Detected: /sc:improve database query performance with personas: performance, backend"
+    }
+  ]
+}
