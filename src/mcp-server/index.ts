@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { ClaudeCodeBridge } from '../integration/claude-code-bridge';
 import { commandMatcher } from '../utils/command-matcher';
 import { normalizePersonaNames } from '../utils/persona-mapping';
+import { HealthCheck } from './health';
 
 // Tool schemas
 const NaturalLanguageToolSchema = z.object({
@@ -32,6 +33,7 @@ const ConflictResolutionToolSchema = z.object({
 
 // Initialize components
 const claudeCodeBridge = new ClaudeCodeBridge();
+const healthCheck = new HealthCheck();
 
 // Create MCP server
 const server = new Server(
@@ -48,6 +50,7 @@ const server = new Server(
 
 // Register tools
 server.setRequestHandler(ListToolsRequestSchema, async () => {
+  healthCheck.ping();
   return {
     tools: [
       {
@@ -71,6 +74,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 // Handle tool calls
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  healthCheck.ping();
   const { name, arguments: args } = request.params;
 
   switch (name) {
@@ -223,11 +227,62 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+  console.error('Received SIGINT, shutting down gracefully...');
+  healthCheck.stop();
+  await server.close();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.error('Received SIGTERM, shutting down gracefully...');
+  healthCheck.stop();
+  await server.close();
+  process.exit(0);
+});
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 // Start the server
 async function main() {
   const transport = new StdioServerTransport();
+  
+  // Handle stdin/stdout errors
+  process.stdin.on('error', (error) => {
+    console.error('Stdin error:', error);
+    process.exit(1);
+  });
+  
+  process.stdout.on('error', (error) => {
+    console.error('Stdout error:', error);
+    process.exit(1);
+  });
+  
+  // Handle stdin close
+  process.stdin.on('close', () => {
+    console.error('Stdin closed, shutting down...');
+    healthCheck.stop();
+    process.exit(0);
+  });
+  
   await server.connect(transport);
   console.error('SuperClaude Enterprise MCP server running...');
+  
+  // Start health check
+  healthCheck.start();
+  
+  // Keep the process alive
+  process.stdin.resume();
 }
 
 main().catch((error) => {
