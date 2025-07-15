@@ -66,19 +66,8 @@ setup_superclaude() {
         cd ..
     else
         echo "  Cloning SuperClaude v3..."
-        git clone https://github.com/Shubhamsaboo/awesome-llm-apps.git SuperClaude-temp
-        
-        # Extract only SuperClaude v3 directory
-        if [ -d "SuperClaude-temp/claude_extensions/SuperClaude" ]; then
-            mv SuperClaude-temp/claude_extensions/SuperClaude ./SuperClaude
-            rm -rf SuperClaude-temp
-            echo -e "${GREEN}✓ SuperClaude v3 cloned successfully${NC}"
-        else
-            echo -e "${RED}❌ Could not find SuperClaude in repository${NC}"
-            echo "   Please check the repository structure"
-            rm -rf SuperClaude-temp
-            exit 1
-        fi
+        git clone https://github.com/NomenAK/SuperClaude.git
+        echo -e "${GREEN}✓ SuperClaude v3 cloned successfully${NC}"
     fi
 }
 
