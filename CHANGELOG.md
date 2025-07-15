@@ -73,6 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installation process now more flexible with SuperClaude path detection
 - Better error handling for standalone operation without SuperClaude
 - Enhanced documentation with natural language examples
+- Natural language confidence scoring normalized to percentage (0-100%)
+- Default .claude/settings.json includes natural language processing hook
 
 ## [Unreleased]
 

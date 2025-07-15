@@ -147,6 +147,15 @@ export function matchCommand(userInput: string): CommandMatch {
   // Sort by confidence
   matches.sort((a, b) => b.confidence - a.confidence);
 
+  // Calculate percentage confidence (normalize to 0-100)
+  if (matches.length > 0) {
+    const maxScore = matches[0].confidence;
+    matches.forEach(match => {
+      // Convert score to percentage (0-100)
+      match.confidence = Math.min(100, Math.round((match.confidence / maxScore) * 100));
+    });
+  }
+
   // If no matches, try to infer from general patterns
   if (matches.length === 0) {
     if (input.includes('만들') || input.includes('create') || input.includes('add')) {

@@ -8,11 +8,12 @@ SuperClaude Enterprise is a powerful extension for SuperClaude v3 that adds ente
 
 ### 1. **Natural Language Command Processing** 🆕
 - ✅ Free-form input in Korean and English
-- ✅ Intelligent command matching with confidence scoring
+- ✅ Intelligent command matching with confidence scoring (0-100%)
 - ✅ Automatic persona recommendation based on context
 - ✅ Command suggestion system
 - ✅ Integration with Claude Code via hooks
 - ✅ Support for `/sc: 자유로운 입력` format
+- ✅ Default .claude/settings.json includes natural language hook
 
 ### 2. **Intelligent Conflict Resolution System**
 - ✅ 9 specialized personas (Security, Architect, Performance, QA, Backend, Frontend, DevOps, Refactorer, Analyzer)
