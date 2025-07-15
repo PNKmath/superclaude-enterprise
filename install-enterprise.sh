@@ -134,7 +134,8 @@ check_optional_dependencies() {
     else
         echo -e "${YELLOW}ℹ️  Gemini CLI not found${NC}"
         echo "   To enable cost-optimized processing for large files:"
-        echo "   pip install google-generativeai"
+        echo "   npm install -g @google/gemini-cli"
+        echo "   export GEMINI_API_KEY='your-api-key-here'"
         echo "   This is optional - SuperClaude Enterprise will work without it"
     fi
 }

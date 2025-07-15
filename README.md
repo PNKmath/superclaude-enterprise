@@ -71,7 +71,7 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 ## 📦 설치
 
 ### 요구사항
-- Node.js 18+
+- Node.js 18+ (Gemini CLI 사용 시 20+ 권장)
 - Python 3.8+
 - Git
 - Claude CLI (Claude Code 설치)
@@ -86,9 +86,14 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 ### Gemini CLI 설치 (선택사항)
 Gemini를 사용하면 대용량 파일 처리 시 최대 50% 비용 절감:
 ```bash
-pip install google-generativeai
-# 또는
-pip install gemini-cli  # 실제 패키지명 확인 필요
+# Node.js 20+ 필요
+npm install -g @google/gemini-cli
+
+# 설치 확인
+gemini --version
+
+# API 키 설정 (Google AI Studio에서 발급)
+export GEMINI_API_KEY="your-api-key-here"
 ```
 
 ### 설치 방법 1: 전역 설치 (권장)

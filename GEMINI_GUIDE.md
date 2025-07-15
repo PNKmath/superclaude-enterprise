@@ -44,14 +44,24 @@ sc-enterprise run '/sc:analyze logs/*.json' --backend gemini
 
 ## 설치 방법
 
-### 1. Google AI Python SDK 설치 (권장)
+### 1. Gemini CLI 설치 (Node.js 20+ 필요)
 ```bash
-pip install google-generativeai
+# 전역 설치
+npm install -g @google/gemini-cli
+
+# 또는 npx로 직접 실행
+npx https://github.com/google-gemini/gemini-cli
 ```
 
-### 2. 환경 변수 설정
+### 2. API 키 설정
 ```bash
+# Google AI Studio에서 API 키 발급
+# https://makersuite.google.com/app/apikey
+export GEMINI_API_KEY="your-api-key-here"
+
+# 또는 Vertex AI 사용 시
 export GOOGLE_API_KEY="your-api-key-here"
+export GOOGLE_GENAI_USE_VERTEXAI=true
 ```
 
 ### 3. 설치 확인
@@ -60,7 +70,7 @@ export GOOGLE_API_KEY="your-api-key-here"
 gemini --version
 
 # SuperClaude Enterprise에서 확인
-sc-enterprise status
+superclaude-enterprise status
 # Output: Gemini CLI: ✓
 ```
 
@@ -122,8 +132,11 @@ sc-enterprise test-routing '/sc:analyze' -f "data.json" -s "500KB"
 
 ### "Gemini CLI not available" 오류
 ```bash
-# Python 패키지 재설치
-pip install --upgrade google-generativeai
+# Node.js 버전 확인 (20+ 필요)
+node --version
+
+# Gemini CLI 재설치
+npm install -g @google/gemini-cli
 
 # PATH 확인
 which gemini
@@ -132,10 +145,14 @@ which gemini
 ### API 키 오류
 ```bash
 # API 키 설정 확인
-echo $GOOGLE_API_KEY
+echo $GEMINI_API_KEY
 
 # 키 재설정
-export GOOGLE_API_KEY="your-new-key"
+export GEMINI_API_KEY="your-new-key"
+
+# 영구 설정 (.bashrc 또는 .zshrc에 추가)
+echo 'export GEMINI_API_KEY="your-api-key-here"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 ## 모니터링

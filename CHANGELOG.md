@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced documentation with natural language examples
 - Natural language confidence scoring normalized to percentage (0-100%)
 - Default .claude/settings.json includes natural language processing hook
+- Corrected Gemini CLI installation instructions to use npm package
 
 ## [Unreleased]
 
