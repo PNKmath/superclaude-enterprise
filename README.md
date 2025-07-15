@@ -80,14 +80,14 @@ cp -r dist/* ~/.claude/enterprise/
 ```
   1. 독립적으로 설치 (권장)
 
-  # 원하는 위치에 클론
+  #### 원하는 위치에 클론
   git clone https://github.com/PNKmath/superclaude-enterprise.git
   cd superclaude-enterprise
 
-  # 설치 스크립트 실행
+  #### 설치 스크립트 실행
   ./install-enterprise.sh
 
-  # 전역 명령어로 사용
+  #### 전역 명령어로 사용
   superclaude-enterprise --help
 
   이 방법의 장점:
@@ -97,33 +97,33 @@ cp -r dist/* ~/.claude/enterprise/
 
   2. 프로젝트 내부에 설치
 
-  # 프로젝트 디렉토리로 이동
+  #### 프로젝트 디렉토리로 이동
   cd my-project
 
-  # 프로젝트 내부에 클론
+  #### 프로젝트 내부에 클론
   git clone https://github.com/PNKmath/superclaude-enterprise.git
   cd superclaude-enterprise
 
-  # 설치
+  #### 설치
   ./install-enterprise.sh
 
-  # 프로젝트 내에서만 사용
+  #### 프로젝트 내에서만 사용
   ./bin/superclaude-enterprise --help
 
   🔧 Claude Code Hooks 설정
 
   설치 후, 현재 프로젝트에서 hooks를 사용하려면:
 
-  # 프로젝트 루트로 이동
+  #### 프로젝트 루트로 이동
   cd /path/to/your/project
 
-  # .claude 디렉토리 생성
+  #### .claude 디렉토리 생성
   mkdir -p .claude
 
-  # SuperClaude Enterprise의 기본 hooks 복사
+  #### SuperClaude Enterprise의 기본 hooks 복사
   cp /path/to/superclaude-enterprise/.claude/settings.json .claude/
 
-  # 또는 특정 언어용 hooks 사용
+  #### 또는 특정 언어용 hooks 사용
   cp /path/to/superclaude-enterprise/.claude/hooks/python-project.json .claude/settings.json
 
   📁 프로젝트 구조 예시
@@ -138,12 +138,12 @@ cp -r dist/* ~/.claude/enterprise/
 
   🚀 사용 예시
 
-  # 어느 프로젝트에서든 사용
+  #### 어느 프로젝트에서든 사용
   cd /any/project
   superclaude-enterprise hooks              # 활성 hooks 보기
   superclaude-enterprise run "/sc:analyze"  # 명령 실행
 
-  # Claude Code와 함께 사용
+  #### Claude Code와 함께 사용
   claude "파일을 수정해줘"  # hooks가 자동으로 실행됨
 
   권장사항은 독립적으로 설치하는 것입니다. 그러면 모든 프로젝트에서 사용할 수 있고, 각 프로젝트마다 .claude/settings.json만 설정하면 됩니다.
