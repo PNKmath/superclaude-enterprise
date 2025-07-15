@@ -1,0 +1,69 @@
+{
+  "name": "superclaude-enterprise",
+  "version": "1.0.0",
+  "description": "Enterprise-grade extension for SuperClaude with conflict resolution, Gemini integration, and advanced features",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest tests/integration",
+    "test:e2e": "jest --config=jest.e2e.config.js",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "start": "node dist/index.js",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "version": "npm run lint && git add -A src",
+    "postversion": "git push && git push --tags",
+    "install:enterprise": "bash scripts/install-enterprise.sh",
+    "health-check": "node scripts/health-check.js"
+  },
+  "keywords": [
+    "superclaude",
+    "enterprise",
+    "ai",
+    "development",
+    "automation"
+  ],
+  "author": "SuperClaude Enterprise Team",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^20.0.0",
+    "axios": "^1.6.0",
+    "chalk": "^5.3.0",
+    "commander": "^11.0.0",
+    "dotenv": "^16.3.1",
+    "js-yaml": "^4.1.0",
+    "lodash": "^4.17.21",
+    "pino": "^8.16.0",
+    "redis": "^4.6.0",
+    "sqlite3": "^5.1.6",
+    "typescript": "^5.2.0",
+    "winston": "^3.11.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/lodash": "^4.14.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.50.0",
+    "jest": "^29.7.0",
+    "pino-pretty": "^13.0.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/superclaude-enterprise.git"
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "version": "1.0.0",
+  "conflict_resolver": {
+    "enabled": true,
+    "default_strategy": "priority_based",
+    "negotiation_timeout": "100ms",
+    "strategies": {
+      "veto_override": {
+        "enabled": true,
+        "conditions": ["unsafe_operations", "credential_exposure", "skip_validation"]
+      },
+      "priority_based": {
+        "enabled": true,
+        "threshold_difference": 3
+      },
+      "negotiation": {
+        "enabled": true,
+        "max_rounds": 3
+      },
+      "sequential_access": {
+        "enabled": true
+      },
+      "weighted_consensus": {
+        "enabled": true,
+        "threshold_percentage": 0.75
+      }
+    }
+  },
+  "gemini": {
+    "enabled": true,
+    "autoRouting": true,
+    "costThreshold": 0.10,
+    "quotaManagement": {
+      "dailyLimit": 1000,
+      "rateLimit": "60/min",
+      "warningThreshold": 0.8
+    },
+    "routing_rules": {
+      "large_file_threshold": "100KB",
+      "multi_file_threshold": 10,
+      "context_size_threshold": "100KB",
+      "prefer_gemini_for": ["summarization", "large_analysis", "batch_operations"]
+    }
+  },
+  "execution_levels": {
+    "default": 2,
+    "production_override": 3,
+    "auto_determine": true,
+    "level_rules": {
+      "0": ["read", "analyze", "list"],
+      "1": ["test", "validate", "check"],
+      "2": ["refactor", "update", "modify"],
+      "3": ["deploy", "delete", "security"],
+      "4": ["production", "credentials", "system"]
+    }
+  },
+  "hooks": {
+    "enabled": true,
+    "batch_size": 10,
+    "debounce_time": "2000ms",
+    "cache_ttl": "3600s",
+    "timeout": "5000ms",
+    "retry_attempts": 3
+  },
+  "learning": {
+    "enabled": true,
+    "privacy_mode": "strict",
+    "retention_days": 30,
+    "min_pattern_frequency": 3,
+    "insights": {
+      "personal": true,
+      "team": true,
+      "anonymous_sharing": false
+    }
+  },
+  "security": {
+    "mask_credentials": true,
+    "audit_logging": true,
+    "allowed_commands": "*",
+    "blocked_patterns": [
+      "rm -rf /",
+      "format c:",
+      "> /dev/sda"
+    ],
+    "sensitive_file_patterns": [
+      "*.pem",
+      "*.key",
+      "*credentials*",
+      "*secret*",
+      ".env*"
+    ]
+  },
+  "personas": {
+    "security": {
+      "priority": 10,
+      "auto_activate": ["production", "credentials", "auth"],
+      "veto_conditions": ["unsafe_operations", "credential_exposure", "skip_validation"]
+    },
+    "architect": {
+      "priority": 8,
+      "auto_activate": ["design", "structure", "pattern"]
+    },
+    "performance": {
+      "priority": 7,
+      "auto_activate": ["optimize", "speed", "benchmark"]
+    },
+    "qa": {
+      "priority": 7,
+      "auto_activate": ["test", "validate", "coverage"],
+      "veto_conditions": ["broken_tests", "no_coverage"]
+    },
+    "backend": {
+      "priority": 6,
+      "auto_activate": ["api", "server", "database"]
+    },
+    "frontend": {
+      "priority": 6,
+      "auto_activate": ["ui", "component", "style"]
+    },
+    "devops": {
+      "priority": 5,
+      "auto_activate": ["deploy", "ci", "docker"]
+    },
+    "refactorer": {
+      "priority": 5,
+      "auto_activate": ["refactor", "clean", "improve"]
+    },
+    "analyzer": {
+      "priority": 4,
+      "auto_activate": ["analyze", "review", "audit"]
+    }
+  },
+  "integrations": {
+    "git_hooks": {
+      "enabled": true,
+      "pre_commit": true,
+      "pre_push": true,
+      "commit_msg": false
+    },
+    "ide": {
+      "vscode": true,
+      "intellij": false,
+      "sublime": false
+    },
+    "ci_cd": {
+      "github_actions": true,
+      "gitlab_ci": false,
+      "jenkins": false
+    }
+  },
+  "performance": {
+    "cache": {
+      "enabled": true,
+      "max_size": "100MB",
+      "ttl": "3600s"
+    },
+    "parallel_processing": true,
+    "lazy_loading": true,
+    "max_concurrent_operations": 5
+  },
+  "monitoring": {
+    "metrics": {
+      "enabled": true,
+      "export_interval": "60s",
+      "retention": "7d"
+    },
+    "logging": {
+      "level": "info",
+      "format": "json",
+      "file": "logs/enterprise.log",
+      "max_size": "100MB",
+      "max_files": 5
+    },
+    "tracing": {
+      "enabled": false,
+      "sample_rate": 0.1
+    }
+  }
+}
