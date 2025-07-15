@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Enterprise-grade extension for SuperClaude with conflict resolution, Gemini integration, and advanced features",
   "main": "dist/index.js",
+  "bin": {
+    "superclaude-enterprise": "./bin/superclaude-enterprise"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
