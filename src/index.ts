@@ -250,7 +250,6 @@ async function main() {
     .command('hooks')
     .description('Manage Claude Code hooks')
     .action(async () => {
-      const { HookEvent } = await import('./extensions/hooks-v4/HookManager');
       const hooks = await extensionManager.hookManager.listHooks();
       
       console.log(chalk.cyan('\n📎 Active Claude Code Hooks:'));
