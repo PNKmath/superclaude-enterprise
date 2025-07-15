@@ -55,13 +55,11 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 - 컨텍스트 기반 자동 레벨 결정
 - 프로덕션 환경 안전 장치
 
-### 5. **Claude Code Hooks 완전 통합**
-- PreToolUse, PostToolUse, Notification, Stop hooks 지원
-- 자동 포맷팅, 테스트, 보안 검증
-- Git hooks 자동 통합
-- IDE 저장 시 즉시 분석
-- 배치 처리 및 캐싱으로 성능 최적화
-- **자연어 명령어 처리**: `/sc: 자유로운 한국어/영어 입력`
+### 5. **Claude Code MCP Server 통합** 🆕
+- MCP (Model Context Protocol) 서버로 작동
+- 자연어 명령어를 SuperClaude 명령어로 변환
+- Claude Code에서 직접 도구 호출 가능
+- 명령어 제안 및 페르소나 충돌 해결 지원
 
 ### 6. **학습 엔진**
 - 사용 패턴 자동 학습
@@ -127,9 +125,28 @@ cd superclaude-enterprise
 ./bin/superclaude-enterprise --help
 ```
 
-### Claude Code Hooks 설정
+### Claude Code MCP Server 설정 (권장) 🆕
 
-각 프로젝트에서 hooks를 사용하려면:
+SuperClaude Enterprise를 MCP 서버로 등록하면 자연어 명령어를 처리할 수 있습니다:
+
+```bash
+# MCP 서버로 등록
+claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
+
+# Claude Code 재시작
+pkill -f "claude" && claude
+```
+
+이제 Claude Code에서 자연어로 요청할 수 있습니다:
+- "SuperClaude를 사용해서 보안 검사를 실행해줘"
+- "implement user authentication with SuperClaude"
+- "API 성능 문제를 분석하고 개선해줘"
+
+자세한 내용은 [MCP_INTEGRATION.md](MCP_INTEGRATION.md) 참조
+
+### Claude Code Hooks 설정 (선택사항)
+
+도구 실행 시 자동화를 원한다면:
 
 ```bash
 # 1. 프로젝트 루트로 이동

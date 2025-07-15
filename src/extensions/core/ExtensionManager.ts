@@ -11,6 +11,7 @@ import { MetricsCollector } from '../../integrations/monitoring/MetricsCollector
 import { createLogger } from '../../utils/logger';
 import { Config } from '../../types/config';
 import { normalizePersonaNames } from '../../utils/persona-mapping';
+import { SuperClaudeBridge } from '../../integration/superclaude-bridge';
 
 export interface CommandOptions {
   personas?: string[];
@@ -37,6 +38,7 @@ export class ExtensionManager {
   private securityLayer: SecurityLayer;
   private metricsCollector: MetricsCollector;
   private superClaudePath: string;
+  private superClaudeBridge: SuperClaudeBridge;
 
   constructor(config: Config) {
     this.logger = createLogger('ExtensionManager');
@@ -51,6 +53,10 @@ export class ExtensionManager {
     this.learningEngine = new LearningEngine(this.logger);
     this.securityLayer = new SecurityLayer(this.logger);
     this.metricsCollector = new MetricsCollector();
+    
+    // Initialize SuperClaude bridge
+    this.superClaudeBridge = new SuperClaudeBridge(this.superClaudePath);
+    this.setupBridgeEventHandlers();
   }
 
   private findSuperClaudePath(): string {
@@ -76,12 +82,28 @@ export class ExtensionManager {
     return path.join(process.cwd(), 'SuperClaude');
   }
 
+  private setupBridgeEventHandlers(): void {
+    // Set up event handlers for SuperClaude bridge
+    this.superClaudeBridge.on('info', (msg) => this.logger.info(msg));
+    this.superClaudeBridge.on('executing', (data) => this.logger.debug('Executing:', data));
+    this.superClaudeBridge.on('stdout', (data) => this.logger.trace(data));
+    this.superClaudeBridge.on('stderr', (data) => this.logger.warn(data));
+    this.superClaudeBridge.on('error', (error) => this.logger.error('Bridge error:', error));
+    this.superClaudeBridge.on('completed', (result) => this.logger.info('Bridge completed:', result));
+  }
+
   async initialize(): Promise<void> {
     this.logger.info('Initializing SuperClaude Enterprise Extension...');
     
     try {
       // Verify SuperClaude installation
       await this.verifySuperClaude();
+      
+      // Validate SuperClaude bridge
+      const bridgeValid = await this.superClaudeBridge.validate();
+      if (!bridgeValid) {
+        throw new Error('SuperClaude bridge validation failed');
+      }
       
       // Initialize all components
       await Promise.all([
@@ -354,17 +376,63 @@ export class ExtensionManager {
       };
     }
     
-    // This is where we would integrate with actual SuperClaude
-    // For now, return mock result
-    return {
-      success: true,
-      output: `Executed ${command} with ${backend} backend`,
-      metadata: { 
-        backend,
-        personas: context.personas?.map((p: any) => p.name),
-        executionTime: Date.now() - context.timestamp
+    try {
+      // Check if command is a natural language command
+      if (command.startsWith('/sc:')) {
+        // Extract natural language part
+        const naturalLanguage = command.substring(4).trim();
+        
+        // Use SuperClaude bridge for natural language processing
+        const result = await this.superClaudeBridge.executeNaturalCommand(
+          naturalLanguage,
+          {
+            backend: backend as 'claude' | 'gemini',
+            level: context.level
+          }
+        );
+        
+        return {
+          success: result.success,
+          output: result.output || result.error,
+          error: result.error,
+          metadata: {
+            backend,
+            personas: context.personas?.map((p: any) => p.name),
+            executionTime: Date.now() - context.timestamp,
+            exitCode: result.exitCode
+          }
+        };
+      } else {
+        // Direct command execution
+        const superClaudeCommand = {
+          command: command,
+          personas: context.personas?.map((p: any) => p.name),
+          flags: Object.entries(context.flags || {}).map(([k, v]) => 
+            v === true ? `--${k}` : `--${k}=${v}`
+          )
+        };
+        
+        const result = await this.superClaudeBridge.execute(superClaudeCommand);
+        
+        return {
+          success: result.success,
+          output: result.output || result.error,
+          error: result.error,
+          metadata: {
+            backend,
+            personas: context.personas?.map((p: any) => p.name),
+            executionTime: Date.now() - context.timestamp,
+            exitCode: result.exitCode
+          }
+        };
       }
-    };
+    } catch (error) {
+      this.logger.error({ error, command }, 'Failed to execute with backend');
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 
   private async checkSuperClaude(): Promise<boolean> {

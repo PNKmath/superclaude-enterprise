@@ -1,0 +1,38 @@
+{
+  "name": "superclaude-enterprise",
+  "version": "1.1.0",
+  "description": "Natural language processing and intelligent command routing for SuperClaude",
+  "command": "node",
+  "args": ["${HOME}/project/CC_persona_based_system/SuperClaude-Enterprise/dist/mcp-server/index.js"],
+  "env": {},
+  "tools": [
+    {
+      "name": "natural_language_command",
+      "description": "Process natural language commands (Korean/English) and convert to SuperClaude commands. Use this when users want to execute commands in natural language.",
+      "examples": [
+        "보안 취약점을 검사해줘",
+        "implement user authentication",
+        "API 성능을 개선해줘"
+      ]
+    },
+    {
+      "name": "suggest_commands", 
+      "description": "Get SuperClaude command suggestions based on partial input",
+      "examples": [
+        "anal",
+        "보안",
+        "perf"
+      ]
+    },
+    {
+      "name": "resolve_persona_conflicts",
+      "description": "Resolve conflicts when multiple personas are requested for a command",
+      "examples": [
+        {
+          "personas": ["security", "performance"],
+          "command": "/sc:analyze"
+        }
+      ]
+    }
+  ]
+}

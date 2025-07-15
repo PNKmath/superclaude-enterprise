@@ -9,6 +9,9 @@ interface CommandMatch {
   confidence: number;
   suggestedPersonas: string[];
   explanation: string;
+  target?: string;
+  flags?: string[];
+  personas?: string[];
 }
 
 interface CommandPattern {
@@ -105,6 +108,78 @@ const personaKeywords: Record<string, string[]> = {
   refactorer: ['refactor', 'clean code', 'solid', 'dry', 'pattern', 'smell', '리팩토링', '클린코드'],
   analyzer: ['analyze', 'debug', 'investigate', 'trace', 'profile', 'diagnose', '분석', '디버그', '조사', '진단']
 };
+
+/**
+ * Find best matches for user input
+ */
+export function findBestMatches(userInput: string): CommandMatch[] {
+  const input = userInput.toLowerCase();
+  const matches: CommandMatch[] = [];
+
+  // Score each command pattern
+  for (const pattern of commandPatterns) {
+    let score = 0;
+    const matchedKeywords: string[] = [];
+    
+    // Check English keywords
+    for (const keyword of pattern.keywords) {
+      if (input.includes(keyword)) {
+        score += keyword.length > 5 ? 3 : 2;
+        matchedKeywords.push(keyword);
+      }
+    }
+    
+    // Check Korean keywords
+    for (const keyword of pattern.koreanKeywords) {
+      if (input.includes(keyword)) {
+        score += 3; // Higher weight for Korean matches
+        matchedKeywords.push(keyword);
+      }
+    }
+    
+    if (score > 0) {
+      // Detect additional personas from input
+      const detectedPersonas = detectAdditionalPersonas(input);
+      const combinedPersonas = [...new Set([...pattern.personas, ...detectedPersonas])];
+      
+      // Extract file targets
+      const filePattern = /\b[\w\-/]+\.\w+\b/g;
+      const files = userInput.match(filePattern) || [];
+      
+      // Extract flags
+      const flagPattern = /--(\w+)/g;
+      const flags: string[] = [];
+      let flagMatch;
+      while ((flagMatch = flagPattern.exec(userInput)) !== null) {
+        flags.push(`--${flagMatch[1]}`);
+      }
+      
+      matches.push({
+        command: pattern.command,
+        confidence: score,
+        suggestedPersonas: combinedPersonas,
+        explanation: `Matched "${pattern.description}" based on keywords: ${matchedKeywords.join(', ')}`,
+        target: files.length > 0 ? files[0] : undefined,
+        flags: flags.length > 0 ? flags : undefined,
+        personas: combinedPersonas
+      });
+    }
+  }
+
+  // Sort by confidence
+  matches.sort((a, b) => b.confidence - a.confidence);
+
+  // Calculate percentage confidence (normalize to 0-100)
+  if (matches.length > 0) {
+    const maxScore = matches[0].confidence;
+    matches.forEach(match => {
+      // Convert score to percentage (0-100)
+      match.confidence = Math.min(100, Math.round((match.confidence / maxScore) * 100));
+    });
+  }
+
+  return matches;
+}
 
 /**
  * Match user input to appropriate command and personas
@@ -267,3 +342,14 @@ export function suggestCommands(partialInput: string): string[] {
   
   return suggestions.slice(0, 5); // Return top 5 suggestions
 }
+
+// Export for use in other modules
+export const commandMatcher = {
+  findBestMatches,
+  detectAdditionalPersonas,
+  parseNaturalCommand,
+  suggestCommands,
+  matchCommand
+};
+
+export default commandMatcher;

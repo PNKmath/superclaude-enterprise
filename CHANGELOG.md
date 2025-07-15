@@ -77,6 +77,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default .claude/settings.json includes natural language processing hook
 - Corrected Gemini CLI installation instructions to use npm package
 
+## [1.2.0] - 2024-01-16
+
+### Added
+- MCP (Model Context Protocol) server implementation
+- Natural language processing as MCP tools for Claude Code
+- Command suggestion tool for partial inputs
+- Persona conflict resolution tool
+- Comprehensive MCP integration documentation
+- Test scripts for MCP server functionality
+
+### Changed
+- Migrated from hook-based approach to proper MCP server integration
+- Natural language commands now work through Claude's tool calling
+- Improved architecture for better Claude Code integration
+
+### Fixed
+- Claude Code hooks only work on tool execution, not user input
+- Proper integration method using MCP protocol
+
 ## [Unreleased]
 
 ### Planned
