@@ -44,10 +44,13 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 - 컨텍스트 기반 동적 가중치
 - 협상 엔진을 통한 최적 결정
 
-### 3. **Gemini CLI 통합**
+### 3. **Gemini CLI 통합 (향상됨)** 🚀
 - 자동 백엔드 선택 (Claude/Gemini)
 - 비용 최적화 (최대 50% 절감)
 - 1M 토큰 대용량 컨텍스트 지원
+- **신규**: 3가지 실행 모드 (Template/Adaptive/Hybrid)
+- **신규**: 맥락 보존 시스템으로 정보 손실 방지
+- **신규**: 세션 연속성 지원
 
 ### 4. **5단계 실행 레벨**
 - Silent (0) → Auto-execute (4)

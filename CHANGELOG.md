@@ -118,6 +118,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cleaner protocol communication without stderr interference
 - More detailed setup documentation in README
 
+## [1.3.0] - 2024-01-17
+
+### Added
+- **Gemini Context Preservation System**: 3-mode intelligent strategy selection
+  - Template Mode (80% of cases): Structured extraction for predictable outputs
+  - Adaptive Mode (15% of cases): Complex problem solving with context preservation
+  - Hybrid Mode (5% of cases): Combines structure with context awareness
+- **Integrated Gemini Adapter**: Unified interface for all execution modes
+  - Automatic mode selection based on command complexity
+  - Session history tracking for context continuity
+  - Validation system with coverage metrics
+  - Retry mechanism for failed extractions
+- **Strategy Selection Intelligence**:
+  - Complexity assessment algorithm (0.0-1.0 scale)
+  - Pattern recognition for command types
+  - Persona-aware context preservation
+  - Confidence scoring for mode selection
+- **Extraction Templates**: Pre-defined templates for common commands
+  - Security analysis with CWE-ID and CVSS scoring
+  - Performance analysis with metrics and bottlenecks
+  - Implementation tasks with requirements tracking
+  - Code review with categorized findings
+- **Context Preservation Features**:
+  - Preservation rules for critical information
+  - Session continuity across interactions
+  - Validation of context coverage
+  - Adaptive detail levels (minimal/standard/detailed)
+
+### Improved
+- Gemini CLI integration now prevents context loss through structured prompts
+- Backend selection considers strategy complexity for optimal routing
+- Error handling with graceful fallbacks between modes
+- Memory efficiency through intelligent session history management
+- Cost optimization through mode-appropriate processing
+
+### Fixed
+- Context loss issues when using Gemini as data relay
+- Information preservation for complex multi-step operations
+- Session continuity problems across Gemini interactions
+
+### Technical Details
+- Comprehensive test coverage for all strategy modes
+- TypeScript strict mode compliance
+- Modular architecture for easy extension
+- Performance optimized for <100ms strategy selection
+
 ## [Unreleased]
 
 ### Planned

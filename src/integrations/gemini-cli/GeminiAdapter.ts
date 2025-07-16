@@ -21,11 +21,11 @@ export interface BackendDecision {
 }
 
 export class GeminiAdapter {
-  private logger: Logger;
-  private config: GeminiConfig;
-  private isGeminiAvailable: boolean = false;
-  private dailyUsage: number = 0;
-  private lastResetDate: Date = new Date();
+  protected logger: Logger;
+  protected config: GeminiConfig;
+  protected isGeminiAvailable: boolean = false;
+  protected dailyUsage: number = 0;
+  protected lastResetDate: Date = new Date();
 
   constructor(logger: Logger, config: GeminiConfig) {
     this.logger = logger;
@@ -214,7 +214,7 @@ export class GeminiAdapter {
     return this.dailyUsage >= this.config.quotaManagement.dailyLimit;
   }
 
-  private transformCommand(command: string, context: any): string {
+  protected transformCommand(command: string, context: any): string {
     // Map SuperClaude commands to Gemini CLI format
     const commandMappings: Record<string, string> = {
       '/sc:analyze': 'gemini analyze',
