@@ -14,6 +14,9 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}🚀 SuperClaude Enterprise Extension Installer${NC}"
 echo "================================================"
+echo -e "${YELLOW}Note: This installation requires user interaction${NC}"
+echo -e "${YELLOW}You will be asked to confirm SuperClaude installation steps${NC}"
+echo ""
 
 # Check prerequisites
 check_prerequisites() {
@@ -73,10 +76,15 @@ setup_superclaude() {
         fi
         
         # Check if SuperClaude is installed
-        if [ ! -d "SuperClaude" ] || [ ! -f "SuperClaude.py" ]; then
-            echo "  Installing SuperClaude..."
+        if ! python3 -c "import SuperClaude" 2>/dev/null; then
+            echo "  Installing SuperClaude package..."
             pip install . || {
-                echo -e "${YELLOW}⚠️  SuperClaude installation failed, continuing anyway...${NC}"
+                echo -e "${YELLOW}⚠️  SuperClaude package installation failed${NC}"
+            }
+            # Run the installer - this will ask for user input
+            echo "  Configuring SuperClaude for Claude Code..."
+            python3 -m SuperClaude install || {
+                echo -e "${YELLOW}⚠️  SuperClaude configuration failed, continuing anyway...${NC}"
             }
         else
             echo -e "${GREEN}✓ SuperClaude already installed${NC}"
@@ -88,9 +96,14 @@ setup_superclaude() {
         git clone https://github.com/NomenAK/SuperClaude.git
         cd SuperClaude
         
-        echo "  Installing SuperClaude..."
+        echo "  Installing SuperClaude package..."
         pip install . || {
-            echo -e "${YELLOW}⚠️  SuperClaude installation failed, continuing anyway...${NC}"
+            echo -e "${YELLOW}⚠️  SuperClaude package installation failed${NC}"
+        }
+        # Run the installer - this will ask for user input
+        echo "  Configuring SuperClaude for Claude Code..."
+        python3 -m SuperClaude install || {
+            echo -e "${YELLOW}⚠️  SuperClaude configuration failed, continuing anyway...${NC}"
         }
         
         cd ..
