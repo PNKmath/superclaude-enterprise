@@ -34,18 +34,21 @@ export class GeminiStrategySelector {
     // Assess complexity to determine mode
     const complexity = this.assessComplexity(context);
     const hasTemplate = this.hasWellDefinedTemplate(command);
+    const isExploratory = this.isExploratoryCommand(command, context);
     const needsHybrid = this.needsHybridApproach(command, context);
 
-    // Decision logic - Check hybrid first
-    if (needsHybrid) {
+    // Decision logic - Check hybrid first as it's most specific
+    if (needsHybrid && !isExploratory) {
       return this.createHybridStrategy(command, context);
     }
 
-    if (complexity > 0.7 || this.isExploratoryCommand(command, context)) {
+    // Check adaptive for complex cases
+    if (complexity > 0.7 || isExploratory || this.isHighStakesOperation(context)) {
       return this.createAdaptiveStrategy(command, context);
     }
 
-    if (hasTemplate && complexity < 0.4) {
+    // Check for well-defined templates
+    if (hasTemplate && complexity < 0.6 && !isExploratory) {
       return this.createTemplateStrategy(command, context);
     }
 
@@ -76,7 +79,7 @@ export class GeminiStrategySelector {
 
     // Flag complexity
     const complexFlags = ['detailed', 'comprehensive', 'exploratory', 'production'];
-    const flagComplexity = complexFlags.filter(f => context.flags?.[f]).length * 0.1;
+    const flagComplexity = complexFlags.filter(f => context.flags?.[f]).length * 0.15;
     complexity += flagComplexity;
 
     // High-stakes personas
@@ -109,9 +112,9 @@ export class GeminiStrategySelector {
     const isHighStakes = this.isHighStakesOperation(context);
 
     const adaptive: AdaptiveSettings = {
-      contextLevel: complexity > 0.7 || isHighStakes ? 'detailed' : 'standard',
+      contextLevel: complexity >= 0.6 || isHighStakes ? 'detailed' : 'standard',
       preservationRules: this.generatePreservationRules(context),
-      validationEnabled: isHighStakes || complexity > 0.6
+      validationEnabled: isHighStakes || complexity >= 0.6
     };
 
     return {
@@ -213,12 +216,13 @@ export class GeminiStrategySelector {
     }
 
     // Mixed requirements - but not for very complex tasks
-    const hasTemplate = this.hasWellDefinedTemplate(command);
     const hasComplexRequirements = context.flags?.preserveApi || 
-                                   (context.personas && context.personas.length >= 2);
+                                   context.flags?.preserveStyle ||
+                                   (command.includes('preserve') && command.includes('pattern'));
     const complexity = this.assessComplexity(context);
     
-    return hasTemplate && hasComplexRequirements && complexity < 0.7;
+    // Only use hybrid if explicitly needed for pattern preservation
+    return hasComplexRequirements && complexity < 0.7;
   }
 
   /**
@@ -258,9 +262,10 @@ export class GeminiStrategySelector {
   private isHighStakesOperation(context: CommandContext): boolean {
     return !!(
       context.flags?.production ||
-      context.personas?.includes('security') ||
       context.command.includes('breach') ||
-      context.command.includes('vulnerability')
+      context.command.includes('vulnerability') ||
+      (context.personas?.includes('security') && 
+       (context.command.includes('potential') || context.command.includes('critical')))
     );
   }
 
