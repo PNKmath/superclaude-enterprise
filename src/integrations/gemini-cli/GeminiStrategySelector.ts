@@ -10,12 +10,15 @@ import {
   AdaptiveSettings,
   CommonSettings 
 } from './types.js';
+import { HybridModeDetector } from './HybridModeDetector.js';
 
 export class GeminiStrategySelector {
   private templateDefinitions: Map<string, ExtractionTemplate>;
+  private hybridDetector: HybridModeDetector;
 
   constructor() {
     this.templateDefinitions = this.initializeTemplates();
+    this.hybridDetector = new HybridModeDetector();
   }
 
   /**
@@ -31,16 +34,16 @@ export class GeminiStrategySelector {
       return this.createAdaptiveStrategy(command, context);
     }
 
+    // Use enhanced hybrid detection
+    const hybridResult = this.hybridDetector.shouldUseHybrid(command, context);
+    if (hybridResult.shouldUseHybrid) {
+      return this.createEnhancedHybridStrategy(command, context, hybridResult);
+    }
+
     // Assess complexity to determine mode
     const complexity = this.assessComplexity(context);
     const hasTemplate = this.hasWellDefinedTemplate(command);
     const isExploratory = this.isExploratoryCommand(command, context);
-    const needsHybrid = this.needsHybridApproach(command, context);
-
-    // Decision logic - Check hybrid first as it's most specific
-    if (needsHybrid && !isExploratory) {
-      return this.createHybridStrategy(command, context);
-    }
 
     // Check adaptive for complex cases
     if (complexity > 0.7 || isExploratory || this.isHighStakesOperation(context)) {
@@ -126,8 +129,10 @@ export class GeminiStrategySelector {
   }
 
   /**
-   * Create a hybrid strategy
+   * Create a hybrid strategy (legacy method for backward compatibility)
+   * @deprecated Use createEnhancedHybridStrategy instead
    */
+  /*
   private createHybridStrategy(command: string, context: CommandContext): GeminiStrategy {
     const template = this.findTemplate(command) || this.createGenericTemplate(command);
     
@@ -144,6 +149,72 @@ export class GeminiStrategySelector {
       adaptive,
       common: this.extractCommonSettings(context)
     };
+  }
+  */
+
+  /**
+   * Create an enhanced hybrid strategy using HybridModeDetector
+   */
+  private createEnhancedHybridStrategy(
+    command: string, 
+    context: CommandContext, 
+    hybridResult: any
+  ): GeminiStrategy {
+    // Get hybrid configuration
+    const hybridConfig = this.hybridDetector.getHybridConfiguration(command, context);
+    
+    // Find or create template
+    const template = this.findTemplate(command) || this.createGenericTemplate(command);
+    
+    // Configure adaptive settings based on detector results
+    const adaptive: AdaptiveSettings = {
+      contextLevel: hybridConfig?.configuration.contextDepth || 'standard',
+      preservationRules: this.generateHybridPreservationRules(context, hybridResult),
+      validationEnabled: hybridResult.score > 0.7
+    };
+
+    // Add hybrid-specific metadata
+    const strategy: GeminiStrategy = {
+      mode: 'hybrid',
+      confidence: Math.min(0.9, 0.7 + hybridResult.score * 0.2),
+      template,
+      adaptive,
+      common: this.extractCommonSettings(context),
+      metadata: {
+        hybridScore: hybridResult.score,
+        hybridReasons: hybridResult.reasons,
+        templateComponent: hybridResult.templateComponent,
+        adaptiveComponent: hybridResult.adaptiveComponent,
+        balanceRatio: hybridConfig?.configuration.balanceRatio
+      }
+    };
+
+    return strategy;
+  }
+
+  /**
+   * Generate preservation rules for hybrid mode
+   */
+  private generateHybridPreservationRules(context: CommandContext, hybridResult: any): string[] {
+    const rules: string[] = [];
+
+    // Pattern-specific rules
+    if (hybridResult.adaptiveComponent?.includes('pattern')) {
+      rules.push('Preserve existing pattern implementations');
+      rules.push('Maintain pattern consistency across codebase');
+      rules.push('Extract reusable pattern components');
+    }
+
+    // Add context-specific rules
+    if (context.flags?.pattern) {
+      rules.push(`Follow ${context.flags.pattern} pattern specifications`);
+    }
+
+    // Add general hybrid rules
+    rules.push('Balance structure with flexibility');
+    rules.push('Maintain clear separation between template and adaptive components');
+
+    return rules;
   }
 
   /**
@@ -201,7 +272,9 @@ export class GeminiStrategySelector {
 
   /**
    * Check if command needs hybrid approach
+   * @deprecated Use HybridModeDetector.shouldUseHybrid() instead
    */
+  /*
   private needsHybridApproach(command: string, context: CommandContext): boolean {
     // Pattern-based implementation
     if (command.includes('following existing patterns') || 
@@ -224,6 +297,7 @@ export class GeminiStrategySelector {
     // Only use hybrid if explicitly needed for pattern preservation
     return hasComplexRequirements && complexity < 0.7;
   }
+  */
 
   /**
    * Check if command is exploratory
@@ -295,7 +369,9 @@ export class GeminiStrategySelector {
 
   /**
    * Generate essential rules for hybrid mode
+   * @deprecated Moved to generateHybridPreservationRules
    */
+  /*
   private generateEssentialRules(context: CommandContext): string[] {
     const rules: string[] = [];
 
@@ -311,6 +387,7 @@ export class GeminiStrategySelector {
     
     return rules;
   }
+  */
 
   /**
    * Create generic template

@@ -36,6 +36,15 @@ export interface GeminiStrategy {
   
   // Common settings for all modes
   common: CommonSettings;
+  
+  // Optional metadata for enhanced strategies
+  metadata?: {
+    hybridScore?: number;
+    hybridReasons?: string[];
+    templateComponent?: string;
+    adaptiveComponent?: string;
+    balanceRatio?: { template: number; adaptive: number };
+  };
 }
 
 export interface CommandContext {

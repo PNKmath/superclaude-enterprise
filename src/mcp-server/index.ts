@@ -15,11 +15,14 @@ import { ClaudeCodeBridge } from '../integration/claude-code-bridge.js';
 import { commandMatcher } from '../utils/command-matcher.js';
 import { normalizePersonaNames } from '../utils/persona-mapping.js';
 import { HealthCheck } from './health.js';
+import { SessionManager } from '../integrations/session/SessionManager.js';
 
 // Tool schemas
 const NaturalLanguageToolSchema = z.object({
   input: z.string().describe('Natural language command in Korean or English'),
   execute: z.boolean().optional().describe('Whether to execute the command immediately'),
+  sessionId: z.string().optional().describe('Session ID for multi-turn conversations'),
+  userId: z.string().optional().describe('User ID for session management'),
 });
 
 const SuggestCommandToolSchema = z.object({
@@ -34,6 +37,7 @@ const ConflictResolutionToolSchema = z.object({
 // Initialize components
 const claudeCodeBridge = new ClaudeCodeBridge();
 const healthCheck = new HealthCheck();
+const sessionManager = new SessionManager();
 
 // Create MCP server
 const server = new Server(
@@ -99,11 +103,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   switch (name) {
     case 'natural_language_command': {
-      const { input, execute } = NaturalLanguageToolSchema.parse(args);
+      const { input, execute, sessionId, userId } = NaturalLanguageToolSchema.parse(args);
       
       try {
-        // Convert natural language to command
-        const result = await claudeCodeBridge.convertNaturalLanguage(input);
+        // Get or create session
+        const session = await sessionManager.getOrCreateSession(
+          userId || 'default',
+          sessionId
+        );
+        
+        // Get previous context from session
+        const previousContext = session.turns.length > 0
+          ? session.turns[session.turns.length - 1].context
+          : undefined;
+        
+        // Convert natural language to command with session context
+        const result = await claudeCodeBridge.convertNaturalLanguage(input, {
+          sessionId: session.id,
+          previousContext,
+          turnNumber: session.turns.length + 1
+        });
         
         if (!result.success) {
           return {
@@ -116,14 +135,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           };
         }
         
-        // Format output
+        // Add turn to session
+        await sessionManager.addTurn(session.id, {
+          input,
+          command: result.convertedCommand || '',
+          result,
+          timestamp: new Date(),
+          context: result.context || {}
+        });
+        
+        // Format output with session info
         const output = [
           '🤖 Natural Language Processing Result',
+          `Session: ${session.id.substring(0, 16)}... (Turn ${session.turns.length})`,
           `Input: "${input}"`,
           `Command: ${result.convertedCommand}`,
           `Confidence: ${result.confidence}%`,
           `Personas: ${result.suggestedPersonas?.join(', ')}`,
         ];
+        
+        // Add context preservation info if available
+        if (result.context?.detectedIntent) {
+          output.push(`Intent: ${result.context.detectedIntent}`);
+        }
+        
+        if (result.context?.needsHybridMode) {
+          output.push(`Mode: Hybrid (Pattern-based)`);
+        }
+        
+        // Show session continuity
+        if (previousContext) {
+          output.push('', '🔗 Session Context:');
+          if (previousContext.target) {
+            output.push(`  Previous target: ${previousContext.target}`);
+          }
+          if (previousContext.flags?.size > 0) {
+            output.push(`  Inherited flags: ${Array.from(previousContext.flags.keys()).join(', ')}`);
+          }
+        }
         
         if (execute && result.convertedCommand) {
           output.push('', '📌 Suggested next action:');
@@ -137,6 +186,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               text: output.join('\n'),
             },
           ],
+          metadata: {
+            sessionId: session.id,
+            turnNumber: session.turns.length
+          }
         };
       } catch (error) {
         return {
