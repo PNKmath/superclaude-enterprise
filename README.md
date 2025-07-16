@@ -48,9 +48,13 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 - 자동 백엔드 선택 (Claude/Gemini)
 - 비용 최적화 (최대 50% 절감)
 - 1M 토큰 대용량 컨텍스트 지원
-- **신규**: 3가지 실행 모드 (Template/Adaptive/Hybrid)
+- **신규**: 3가지 실행 모드로 맥락 보존
+  - **Template Mode (80%)**: 구조화된 출력으로 일관된 결과 보장
+  - **Adaptive Mode (15%)**: 복잡한 문제 해결 시 동적 맥락 보존
+  - **Hybrid Mode (5%)**: 패턴 기반 작업에서 구조와 유연성 결합
 - **신규**: 맥락 보존 시스템으로 정보 손실 방지
-- **신규**: 세션 연속성 지원
+- **신규**: 세션 연속성 지원 및 검증 시스템
+- 자세한 내용은 [Gemini 통합 가이드](GEMINI_INTEGRATION.md) 참조
 
 ### 4. **5단계 실행 레벨**
 - Silent (0) → Auto-execute (4)
@@ -261,6 +265,17 @@ sc-enterprise test-routing '/sc:analyze' -f "large-dataset.json" -s "500KB"
 # Selected Backend: gemini
 # Reason: File size > 100KB threshold
 # Estimated Cost: $0.02
+# Strategy Mode: template (구조화된 출력)
+
+# Gemini 전략 모드 확인
+sc-enterprise test-gemini-strategy '/sc:analyze --security auth.js'
+# → Template Mode: 일관된 보안 분석 보고서
+
+sc-enterprise test-gemini-strategy '/sc:analyze strange behavior' --detailed
+# → Adaptive Mode: 복잡한 문제의 동적 분석
+
+sc-enterprise test-gemini-strategy '/sc:implement following patterns'
+# → Hybrid Mode: 패턴 기반 구현
 ```
 
 ### 빠른 명령어
@@ -355,6 +370,12 @@ gemini:
   enabled: true
   auto_routing: true
   cost_threshold: 0.10
+  # 맥락 보존 전략 (신규)
+  strategy:
+    auto_select_mode: true  # 자동 모드 선택
+    default_mode: "template"  # 기본 모드
+    validation_threshold: 0.9  # 검증 임계값
+    max_retries: 2  # 실패 시 재시도
   
 # 실행 레벨
 execution_levels:
@@ -517,6 +538,8 @@ MIT License - SuperClaude 라이선스 준수
 ## 📚 추가 문서
 
 - [Claude Code 통합 가이드](CLAUDE_CODE_INTEGRATION.md) - Claude Code 내에서 사용하는 방법
+- [MCP 통합 가이드](MCP_INTEGRATION.md) - MCP 서버 설정 및 문제 해결
+- [Gemini 통합 가이드](GEMINI_INTEGRATION.md) - Gemini CLI 통합 및 맥락 보존 시스템
 - [상세 사용법](USAGE.md) - 모든 기능의 상세 가이드
 - [아키텍처](ARCHITECTURE.md) - 시스템 구조와 설계
 - [프로젝트 요약](PROJECT_SUMMARY.md) - 기능 및 테스트 현황

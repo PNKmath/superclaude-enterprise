@@ -118,7 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cleaner protocol communication without stderr interference
 - More detailed setup documentation in README
 
-## [1.3.0] - 2024-01-17
+## [1.3.0] - 2025-07-16
 
 ### Added
 - **Gemini Context Preservation System**: 3-mode intelligent strategy selection
