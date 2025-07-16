@@ -13,30 +13,49 @@ npm run build
 
 ### 2. Claude Code에 MCP 서버 등록
 
-#### 방법 1: Claude CLI 사용 (권장)
+#### 방법 1: mcp.json 파일 직접 수정 (권장)
+
+Claude Code의 MCP 설정 파일을 직접 수정합니다:
+
+**macOS:**
+```bash
+# 설정 파일 열기
+open ~/Library/Application\ Support/Claude/mcp.json
+```
+
+**Windows:**
+```
+# 설정 파일 위치
+%APPDATA%\Claude\mcp.json
+```
+
+**Linux:**
+```bash
+# 설정 파일 열기
+nano ~/.config/claude/mcp.json
+```
+
+다음 내용을 추가:
+```json
+{
+  "superclaude-enterprise": {
+    "command": "node",
+    "args": ["/absolute/path/to/SuperClaude-Enterprise/dist/mcp-server/index.js"],
+    "env": {}
+  }
+}
+```
+
+**중요**: `/absolute/path/to/` 부분을 실제 SuperClaude-Enterprise 경로로 변경하세요.
+
+#### 방법 2: Claude CLI 사용
 
 ```bash
 # MCP 서버 추가
-claude mcp add -s user superclaude-enterprise "node $HOME/project/CC_persona_based_system/SuperClaude-Enterprise/dist/mcp-server/index.js"
+claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
 
 # 설치 확인
 claude mcp list
-```
-
-#### 방법 2: 수동 설정
-
-`~/.claude/settings.json` 파일에 다음 내용을 추가:
-
-```json
-{
-  "mcpServers": {
-    "superclaude-enterprise": {
-      "command": "node",
-      "args": ["${HOME}/project/CC_persona_based_system/SuperClaude-Enterprise/dist/mcp-server/index.js"],
-      "env": {}
-    }
-  }
-}
 ```
 
 
@@ -154,13 +173,70 @@ Claude: [resolve_persona_conflicts 도구를 호출하여 해결]
 
 ## 🐛 문제 해결
 
+### MCP 서버가 "failed" 상태로 표시됨
+
+**원인 및 해결방법:**
+
+1. **Node.js 버전 확인**
+```bash
+node --version  # 18.0.0 이상이어야 함
+```
+
+2. **빌드 확인**
+```bash
+cd /path/to/SuperClaude-Enterprise
+npm install
+npm run build
+ls -la dist/mcp-server/index.js  # 파일이 존재해야 함
+```
+
+3. **MCP 서버 테스트**
+```bash
+# 테스트 스크립트 실행
+node test-mcp-full.cjs
+```
+
+4. **경로 확인**
+mcp.json의 경로가 절대 경로인지 확인:
+```json
+{
+  "superclaude-enterprise": {
+    "command": "node",
+    "args": ["/home/user/SuperClaude-Enterprise/dist/mcp-server/index.js"],
+    "env": {}
+  }
+}
+```
+
+### 모듈 로딩 오류
+
+**증상**: `ERR_MODULE_NOT_FOUND` 오류
+
+**해결방법**: 
+1. package.json에 `"type": "module"` 확인
+2. 모든 import에 .js 확장자 포함 확인
+3. 다시 빌드: `npm run build`
+
+### Health Check 문제
+
+**증상**: "Health check failed" 메시지
+
+**해결방법**:
+```bash
+# Health check 비활성화 (선택사항)
+export ENABLE_HEALTH_CHECK=false
+```
+
 ### Claude Code 재시작 후 MCP 서버가 연결되지 않음
 
 **해결책: Claude Code 완전 재시작**
 ```bash
+# macOS/Linux
 pkill -f "claude"
 sleep 5
 claude
+
+# Windows: 작업 관리자에서 Claude 프로세스 종료 후 재시작
 ```
 
 ### MCP 서버가 보이지 않음
@@ -169,9 +245,10 @@ claude
 # MCP 서버 목록 확인
 claude mcp list
 
-# 서버 제거 후 재추가
-claude mcp remove superclaude-enterprise
-claude mcp add -s user superclaude-enterprise "node /path/to/dist/mcp-server/index.js"
+# mcp.json 직접 확인
+# macOS: ~/Library/Application Support/Claude/mcp.json
+# Windows: %APPDATA%\Claude\mcp.json
+# Linux: ~/.config/claude/mcp.json
 ```
 
 ### 도구가 호출되지 않음
@@ -183,10 +260,13 @@ Claude에게 명시적으로 도구 사용을 요청하세요:
 ### 로그 확인
 
 ```bash
-# Claude Code 로그 확인
-tail -f ~/.claude/logs/claude.log
+# MCP 서버 로그
+cat mcp-server.log
 
-# MCP 서버 로그는 stderr로 출력됩니다
+# Claude Code 로그 (있는 경우)
+# macOS: ~/Library/Logs/Claude/
+# Windows: %APPDATA%\Claude\Logs\
+# Linux: ~/.config/claude/logs/
 ```
 
 ## 🔗 관련 문서

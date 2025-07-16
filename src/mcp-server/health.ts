@@ -18,7 +18,10 @@ export class HealthCheck {
       const elapsed = now - this.lastPing;
       
       if (elapsed > this.TIMEOUT) {
-        console.error(`Health check failed: No activity for ${elapsed}ms`);
+        // Write to log file instead of stderr
+        const fs = require('fs');
+        const logMessage = `${new Date().toISOString()} - Health check failed: No activity for ${elapsed}ms\n`;
+        fs.appendFileSync('mcp-server.log', logMessage);
         // Force restart
         process.exit(1);
       }

@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { Config } from '../types/config';
+import { Config } from '../types/config.js';
 
 const DEFAULT_CONFIG: Config = {
   version: '1.0.0',

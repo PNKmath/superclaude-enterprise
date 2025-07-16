@@ -2,6 +2,7 @@
   "name": "superclaude-enterprise",
   "version": "1.1.0",
   "description": "Enterprise-grade extension for SuperClaude with natural language support, conflict resolution, Gemini integration, and advanced features",
+  "type": "module",
   "main": "dist/index.js",
   "bin": {
     "superclaude-enterprise": "./bin/superclaude-enterprise"

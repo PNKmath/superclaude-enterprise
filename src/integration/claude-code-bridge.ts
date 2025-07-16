@@ -4,8 +4,8 @@
  */
 
 import { EventEmitter } from 'events';
-import { commandMatcher } from '../utils/command-matcher';
-import { normalizePersonaNames } from '../utils/persona-mapping';
+import { commandMatcher } from '../utils/command-matcher.js';
+import { normalizePersonaNames } from '../utils/persona-mapping.js';
 
 export interface ClaudeCodeCommand {
   type: 'direct' | 'natural';

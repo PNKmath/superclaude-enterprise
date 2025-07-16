@@ -11,10 +11,10 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
-import { ClaudeCodeBridge } from '../integration/claude-code-bridge';
-import { commandMatcher } from '../utils/command-matcher';
-import { normalizePersonaNames } from '../utils/persona-mapping';
-import { HealthCheck } from './health';
+import { ClaudeCodeBridge } from '../integration/claude-code-bridge.js';
+import { commandMatcher } from '../utils/command-matcher.js';
+import { normalizePersonaNames } from '../utils/persona-mapping.js';
+import { HealthCheck } from './health.js';
 
 // Tool schemas
 const NaturalLanguageToolSchema = z.object({
@@ -56,17 +56,37 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: 'natural_language_command',
         description: 'Process natural language commands in Korean or English and convert to SuperClaude commands',
-        inputSchema: NaturalLanguageToolSchema,
+        inputSchema: {
+          type: 'object',
+          properties: {
+            input: { type: 'string', description: 'Natural language command in Korean or English' },
+            execute: { type: 'boolean', description: 'Whether to execute the command immediately', default: false }
+          },
+          required: ['input']
+        },
       },
       {
         name: 'suggest_commands',
         description: 'Get command suggestions based on partial input',
-        inputSchema: SuggestCommandToolSchema,
+        inputSchema: {
+          type: 'object',
+          properties: {
+            partial_input: { type: 'string', description: 'Partial input for command suggestions' }
+          },
+          required: ['partial_input']
+        },
       },
       {
         name: 'resolve_persona_conflicts',
         description: 'Resolve conflicts between multiple personas',
-        inputSchema: ConflictResolutionToolSchema,
+        inputSchema: {
+          type: 'object',
+          properties: {
+            personas: { type: 'array', items: { type: 'string' }, description: 'List of personas with potential conflicts' },
+            command: { type: 'string', description: 'Command context for conflict resolution' }
+          },
+          required: ['personas', 'command']
+        },
       },
     ],
   };
@@ -275,8 +295,10 @@ async function main() {
   await server.connect(transport);
   // Don't log to stderr - it interferes with MCP protocol
   
-  // Start health check
-  healthCheck.start();
+  // Start health check only if explicitly enabled
+  if (process.env.ENABLE_HEALTH_CHECK === 'true') {
+    healthCheck.start();
+  }
   
   // Keep the process alive
   process.stdin.resume();

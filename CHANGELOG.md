@@ -96,6 +96,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Claude Code hooks only work on tool execution, not user input
 - Proper integration method using MCP protocol
 
+## [1.2.1] - 2024-01-16
+
+### Fixed
+- MCP server module compatibility issues with ESM/CommonJS
+- Import statements missing .js extensions causing module resolution failures
+- Health check logging to stderr interfering with MCP protocol
+- Zod schema serialization issues in MCP tool definitions
+- MCP server failing to start in Claude Code
+
+### Changed
+- Migrated to ES modules with "type": "module" in package.json
+- Updated tsconfig.json to use ES2022 module system
+- Health check now writes to log file instead of stderr
+- Health check is now opt-in via ENABLE_HEALTH_CHECK environment variable
+- Tool schemas now use proper JSON schema format instead of Zod objects
+
+### Improved
+- MCP server stability and reliability
+- Better error handling for module loading
+- Cleaner protocol communication without stderr interference
+- More detailed setup documentation in README
+
 ## [Unreleased]
 
 ### Planned

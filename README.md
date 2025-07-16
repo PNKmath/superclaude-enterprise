@@ -37,7 +37,7 @@ superclaude-enterprise run "/sc:analyze" -p security,architect
 - 한글/영어 모두 지원
 - 자동 명령어 매칭 및 페르소나 추천
 - MCP 서버를 통해 Claude Code에서 자연어로 요청
-- **개선됨**: 자동 재시작 및 health check로 안정성 향상
+- **개선됨**: MCP 서버 안정성 향상 (ESM 모듈 호환성 수정)
 
 ### 2. **지능형 페르소나 충돌 해결**
 - 9개 페르소나 간 자동 우선순위 조정
@@ -128,12 +128,36 @@ cd superclaude-enterprise
 
 SuperClaude Enterprise를 MCP 서버로 등록하면 자연어 명령어를 처리할 수 있습니다:
 
+**방법 1: mcp.json 파일 직접 수정 (권장)**
+```bash
+# 1. Claude Code 설정 디렉토리로 이동
+# macOS: ~/Library/Application Support/Claude/
+# Windows: %APPDATA%\Claude\
+# Linux: ~/.config/claude/
+
+# 2. mcp.json 파일에 다음 내용 추가:
+{
+  "superclaude-enterprise": {
+    "command": "node",
+    "args": ["/absolute/path/to/SuperClaude-Enterprise/dist/mcp-server/index.js"],
+    "env": {}
+  }
+}
+```
+
+**방법 2: claude CLI 사용**
 ```bash
 # MCP 서버로 등록
 claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
+```
 
-# Claude Code 재시작
+**Claude Code 재시작**
+```bash
+# macOS/Linux
 pkill -f "claude" && claude
+
+# Windows
+# Claude Code를 수동으로 재시작
 ```
 
 이제 Claude Code에서 자연어로 요청할 수 있습니다:

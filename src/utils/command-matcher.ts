@@ -2,7 +2,7 @@
  * Intelligent command and persona matcher for natural language input
  */
 
-import { normalizePersonaNames } from './persona-mapping';
+import { normalizePersonaNames } from './persona-mapping.js';
 
 interface CommandMatch {
   command: string;
