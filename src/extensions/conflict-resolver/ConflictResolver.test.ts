@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { ConflictResolver } from './ConflictResolver';
 import { ConflictType, ResolutionStrategy } from './types';
 

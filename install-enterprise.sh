@@ -75,7 +75,7 @@ setup_superclaude() {
         # Check if SuperClaude is installed
         if [ ! -d "SuperClaude" ] || [ ! -f "SuperClaude.py" ]; then
             echo "  Installing SuperClaude..."
-            python3 SuperClaude.py install --quick || {
+            pip install . || {
                 echo -e "${YELLOW}⚠️  SuperClaude installation failed, continuing anyway...${NC}"
             }
         else
@@ -89,7 +89,7 @@ setup_superclaude() {
         cd SuperClaude
         
         echo "  Installing SuperClaude..."
-        python3 SuperClaude.py install --quick || {
+        pip install . || {
             echo -e "${YELLOW}⚠️  SuperClaude installation failed, continuing anyway...${NC}"
         }
         
