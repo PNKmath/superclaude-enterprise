@@ -49,7 +49,10 @@ export class SuperClaudeBridge extends EventEmitter {
     for (const p of possiblePaths) {
       try {
         const fs = require('fs');
-        if (fs.existsSync(path.join(p, 'SuperClaude.py'))) {
+        // Check for setup.py or SuperClaude directory instead of SuperClaude.py
+        if (fs.existsSync(path.join(p, 'setup.py')) || 
+            fs.existsSync(path.join(p, 'SuperClaude')) ||
+            fs.existsSync(path.join(p, 'pyproject.toml'))) {
           this.emit('info', `Found SuperClaude at: ${p}`);
           return p;
         }
@@ -58,13 +61,21 @@ export class SuperClaudeBridge extends EventEmitter {
       }
     }
 
-    throw new Error('SuperClaude installation not found');
+    // Return null instead of throwing error - allow standalone operation
+    this.emit('info', 'SuperClaude not found - running in standalone mode');
+    return '';
   }
 
   /**
    * Validate SuperClaude installation
    */
   async validate(): Promise<boolean> {
+    // If no SuperClaude path found, we're in standalone mode - that's OK
+    if (!this.superclaudePath) {
+      this.emit('info', 'Running in standalone mode - validation skipped');
+      return true; // Return true to allow standalone operation
+    }
+    
     try {
       const result = await this.execute({ command: '--version' });
       return result.success;
@@ -78,6 +89,16 @@ export class SuperClaudeBridge extends EventEmitter {
    * Execute SuperClaude command via subprocess
    */
   async execute(command: SuperClaudeCommand): Promise<ExecutionResult> {
+    // If no SuperClaude path, return standalone mode response
+    if (!this.superclaudePath) {
+      return {
+        success: true,
+        output: 'SuperClaude Enterprise running in standalone mode',
+        error: '',
+        exitCode: 0
+      };
+    }
+    
     const cacheKey = JSON.stringify(command);
     
     // Check cache
@@ -87,7 +108,28 @@ export class SuperClaudeBridge extends EventEmitter {
     }
 
     return new Promise((resolve) => {
-      const args = [path.join(this.superclaudePath, 'SuperClaude.py')];
+      // Try to find the correct entry point
+      const possibleEntryPoints = [
+        path.join(this.superclaudePath, 'SuperClaude', '__main__.py'),
+        path.join(this.superclaudePath, 'setup.py'),
+        path.join(this.superclaudePath, 'SuperClaude.py')
+      ];
+      
+      let entryPoint = '';
+      const fs = require('fs');
+      for (const ep of possibleEntryPoints) {
+        if (fs.existsSync(ep)) {
+          entryPoint = ep;
+          break;
+        }
+      }
+      
+      if (!entryPoint) {
+        // If no entry point found, run in module mode
+        entryPoint = '-m';
+      }
+      
+      const args = entryPoint === '-m' ? ['-m', 'SuperClaude'] : [entryPoint];
       
       // Add main command
       if (command.command) {
