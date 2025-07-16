@@ -130,7 +130,7 @@ describe('GeminiStrategySelector', () => {
       expect(strategy.mode).toBe('hybrid');
       expect(strategy.template).toBeDefined();
       expect(strategy.adaptive).toBeDefined();
-      expect(strategy.adaptive?.contextLevel).toBe('standard');
+      expect(strategy.adaptive?.contextLevel).toBe('medium');
     });
 
     it('should select hybrid mode for guided refactoring', () => {

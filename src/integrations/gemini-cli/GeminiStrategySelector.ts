@@ -210,6 +210,11 @@ export class GeminiStrategySelector {
       rules.push(`Follow ${context.flags.pattern} pattern specifications`);
     }
 
+    // API preservation rule
+    if (context.flags?.preserveApi) {
+      rules.push('preserve_api_compatibility');
+    }
+
     // Add general hybrid rules
     rules.push('Balance structure with flexibility');
     rules.push('Maintain clear separation between template and adaptive components');

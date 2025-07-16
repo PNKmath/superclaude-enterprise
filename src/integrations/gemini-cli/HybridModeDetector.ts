@@ -27,7 +27,7 @@ export class HybridModeDetector {
   };
 
   // Commands that often use patterns
-  private patternCommands = ['implement', 'create', 'design', 'build', 'develop'];
+  private patternCommands = ['implement', 'create', 'design', 'build', 'develop', 'improve', 'refactor'];
 
   // Modifiers that suggest hybrid approach
   // private hybridModifiers = [
