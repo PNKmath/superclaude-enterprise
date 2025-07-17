@@ -61,6 +61,8 @@ export class HookManager {
   private configPath: string;
   private localConfigPath: string;
   private userConfigPath: string;
+  private activeProcesses: Set<any> = new Set();
+  private isCleaningUp: boolean = false;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -205,6 +207,18 @@ export class HookManager {
           env: { ...process.env, ...env },
           detached: true,
           stdio: 'ignore'
+        });
+        
+        // Track the process
+        this.activeProcesses.add(child);
+        
+        // Remove from tracking when done
+        child.on('exit', () => {
+          this.activeProcesses.delete(child);
+        });
+        
+        child.on('error', () => {
+          this.activeProcesses.delete(child);
         });
         
         child.unref();
@@ -361,5 +375,49 @@ export class HookManager {
 
   async listHooks(): Promise<Map<HookEvent, Hook[]>> {
     return new Map(this.hooks);
+  }
+
+  /**
+   * Clean up resources and terminate background processes
+   */
+  async cleanup(): Promise<void> {
+    if (this.isCleaningUp) return;
+    this.isCleaningUp = true;
+    
+    this.logger.info('Cleaning up HookManager resources');
+    
+    // Kill all active background processes
+    for (const child of this.activeProcesses) {
+      try {
+        if (child.pid && !child.killed) {
+          // Try graceful shutdown first
+          process.kill(-child.pid, 'SIGTERM');
+          
+          // Give it 1 second to terminate
+          setTimeout(() => {
+            if (!child.killed) {
+              // Force kill if still running
+              process.kill(-child.pid, 'SIGKILL');
+            }
+          }, 1000);
+        }
+      } catch (error) {
+        // Process might already be dead
+        this.logger.debug({ error, pid: child.pid }, 'Error killing process');
+      }
+    }
+    
+    // Clear the set
+    this.activeProcesses.clear();
+    
+    // Clear hooks to prevent further execution
+    this.hooks.clear();
+  }
+
+  /**
+   * Get the number of active background processes
+   */
+  getActiveProcessCount(): number {
+    return this.activeProcesses.size;
   }
 }

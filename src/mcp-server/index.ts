@@ -300,31 +300,57 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// Handle graceful shutdown
-process.on('SIGINT', async () => {
-  // Don't log to stderr in MCP mode
+// Store cleanup handlers to prevent duplicate registration
+let isShuttingDown = false;
+const cleanupHandlers: (() => Promise<void>)[] = [];
+
+// Single cleanup function
+const cleanup = async () => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  
+  // Run all cleanup handlers
+  for (const handler of cleanupHandlers) {
+    try {
+      await handler();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  }
+  
+  process.exit(0);
+};
+
+// Register cleanup handlers once
+cleanupHandlers.push(async () => {
   healthCheck.stop();
   await server.close();
-  process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
-  // Don't log to stderr in MCP mode
-  healthCheck.stop();
-  await server.close();
-  process.exit(0);
-});
+// Set max listeners to prevent warnings
+process.setMaxListeners(20);
 
-// Handle uncaught errors
-process.on('uncaughtException', () => {
-  // Log errors to file instead of stderr
-  process.exit(1);
-});
+// Handle graceful shutdown - register only once
+if (!process.listenerCount('SIGINT')) {
+  process.once('SIGINT', cleanup);
+}
 
-process.on('unhandledRejection', () => {
-  // Log errors to file instead of stderr
-  process.exit(1);
-});
+if (!process.listenerCount('SIGTERM')) {
+  process.once('SIGTERM', cleanup);
+}
+
+// Handle uncaught errors - use once to prevent multiple registrations
+if (!process.listenerCount('uncaughtException')) {
+  process.once('uncaughtException', () => {
+    process.exit(1);
+  });
+}
+
+if (!process.listenerCount('unhandledRejection')) {
+  process.once('unhandledRejection', () => {
+    process.exit(1);
+  });
+}
 
 // Start the server
 async function main() {
@@ -339,11 +365,8 @@ async function main() {
     process.exit(1);
   });
   
-  // Handle stdin close
-  process.stdin.on('close', () => {
-    healthCheck.stop();
-    process.exit(0);
-  });
+  // Handle stdin close - use once to prevent multiple registrations
+  process.stdin.once('close', cleanup);
   
   await server.connect(transport);
   // Don't log to stderr - it interferes with MCP protocol
