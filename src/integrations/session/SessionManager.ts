@@ -34,6 +34,7 @@ export interface Session {
 export class SessionManager {
   private sessions = new Map<string, Session>();
   private sessionTimeout = 30 * 60 * 1000; // 30 minutes
+  private cleanupTimers = new Map<string, NodeJS.Timeout>();
   
   /**
    * Create a new session
@@ -154,6 +155,13 @@ export class SessionManager {
    */
   clearSession(sessionId: string): void {
     this.sessions.delete(sessionId);
+    
+    // Clear the cleanup timer
+    const timer = this.cleanupTimers.get(sessionId);
+    if (timer) {
+      clearTimeout(timer);
+      this.cleanupTimers.delete(sessionId);
+    }
   }
 
   /**
@@ -329,7 +337,14 @@ export class SessionManager {
    * Schedule session cleanup
    */
   private scheduleCleanup(sessionId: string): void {
-    setTimeout(() => {
+    // Clear any existing timer
+    const existingTimer = this.cleanupTimers.get(sessionId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+    
+    // Create new timer with unref() to not keep process alive
+    const timer = setTimeout(() => {
       const session = this.sessions.get(sessionId);
       if (session) {
         const inactiveTime = Date.now() - session.lastActivity.getTime();
@@ -341,5 +356,25 @@ export class SessionManager {
         }
       }
     }, this.sessionTimeout);
+    
+    // Don't keep the process alive just for this timer
+    timer.unref();
+    
+    // Store the timer
+    this.cleanupTimers.set(sessionId, timer);
+  }
+  
+  /**
+   * Clean up all sessions and timers
+   */
+  async cleanup(): Promise<void> {
+    // Clear all timers
+    for (const timer of this.cleanupTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.cleanupTimers.clear();
+    
+    // Clear all sessions
+    this.sessions.clear();
   }
 }
