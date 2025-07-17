@@ -220,9 +220,10 @@ check_uv() {
 install_uv() {
     echo -e "\n${YELLOW}Installing uv package manager...${NC}"
     echo -e "${BLUE}uv is a fast Python package manager recommended for SuperClaude${NC}"
+    echo -e "${BLUE}It provides better caching and performance than pip${NC}"
     
-    # Install uv using the official installer
-    if curl -LsSf https://astral.sh/uv/install.sh | sh; then
+    # Install uv using the official installer (same as SuperClaude guide)
+    if curl -Ls https://astral.sh/uv/install.sh | sh; then
         echo -e "${GREEN}✓ uv installed successfully${NC}"
         
         # Add uv to PATH for current session
@@ -262,14 +263,63 @@ check_superclaude_installation() {
 install_superclaude() {
     echo -e "\n${YELLOW}Installing SuperClaude...${NC}"
     echo -e "${BLUE}This will install SuperClaude from PyPI${NC}"
-    echo -n "Do you want to proceed? (y/n): "
-    read -r response
     
-    if [[ ! "$response" =~ ^[Yy]$ ]]; then
-        echo -e "${RED}❌ CRITICAL: SuperClaude installation skipped!${NC}"
-        echo -e "${RED}   The MCP server cannot function without SuperClaude.${NC}"
-        echo -e "${RED}   Please run the installer again and install SuperClaude.${NC}"
-        return 1
+    # Check if we're in a virtual environment
+    if [ -z "$VIRTUAL_ENV" ]; then
+        echo -e "\n${YELLOW}You are not in a virtual environment.${NC}"
+        echo -e "${BLUE}SuperClaude recommends using a virtual environment.${NC}"
+        echo -e "\nWould you like to:"
+        echo "1. Create and use a virtual environment (recommended)"
+        echo "2. Install system-wide (requires --system flag)"
+        echo "3. Skip installation"
+        echo -n "Enter your choice (1-3) [1]: "
+        read -r venv_choice
+        
+        case "${venv_choice:-1}" in
+            1)
+                echo -e "\n${YELLOW}Creating virtual environment...${NC}"
+                if command -v uv &> /dev/null; then
+                    # Use uv to create venv (faster)
+                    if uv venv; then
+                        echo -e "${GREEN}✓ Virtual environment created with uv${NC}"
+                        echo -e "${YELLOW}Activating virtual environment...${NC}"
+                        source .venv/bin/activate
+                        echo -e "${GREEN}✓ Virtual environment activated${NC}"
+                    else
+                        echo -e "${RED}❌ Failed to create virtual environment with uv${NC}"
+                        return 1
+                    fi
+                else
+                    # Fallback to standard venv
+                    if python3 -m venv .venv; then
+                        echo -e "${GREEN}✓ Virtual environment created${NC}"
+                        echo -e "${YELLOW}Activating virtual environment...${NC}"
+                        source .venv/bin/activate
+                        echo -e "${GREEN}✓ Virtual environment activated${NC}"
+                    else
+                        echo -e "${RED}❌ Failed to create virtual environment${NC}"
+                        return 1
+                    fi
+                fi
+                ;;
+            2)
+                echo -e "\n${YELLOW}Proceeding with system-wide installation...${NC}"
+                ;;
+            3)
+                echo -e "${RED}❌ CRITICAL: SuperClaude installation skipped!${NC}"
+                echo -e "${RED}   The MCP server cannot function without SuperClaude.${NC}"
+                echo -e "${RED}   Please run the installer again and install SuperClaude.${NC}"
+                return 1
+                ;;
+            *)
+                echo -e "${YELLOW}Invalid choice. Using default (create virtual environment)...${NC}"
+                # Recursively call to handle option 1
+                install_superclaude
+                return $?
+                ;;
+        esac
+    else
+        echo -e "${GREEN}✓ Already in virtual environment: $VIRTUAL_ENV${NC}"
     fi
     
     # Check if uv is available, install if not
