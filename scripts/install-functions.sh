@@ -418,12 +418,73 @@ build_project() {
 
 # Check uv package manager installation
 check_uv() {
-    if ! command -v uv &> /dev/null; then
-        echo -e "${YELLOW}⚠️  uv package manager not found${NC}"
-        return 1
+    # Check if uv is in PATH
+    if command -v uv &> /dev/null; then
+        echo -e "${GREEN}✓ uv $(uv --version 2>/dev/null | cut -d' ' -f2)${NC}"
+        return 0
     fi
-    echo -e "${GREEN}✓ uv $(uv --version 2>/dev/null | cut -d' ' -f2)${NC}"
-    return 0
+    
+    # Check common installation locations
+    for UV_PATH in "$HOME/.cargo/bin/uv" "$HOME/.local/bin/uv"; do
+        if [ -x "$UV_PATH" ]; then
+            echo -e "${YELLOW}⚠️  uv found at $UV_PATH but not in PATH${NC}"
+            echo -e "${BLUE}Adding to PATH for this session...${NC}"
+            export PATH="$(dirname "$UV_PATH"):$PATH"
+            if command -v uv &> /dev/null; then
+                echo -e "${GREEN}✓ uv $(uv --version 2>/dev/null | cut -d' ' -f2)${NC}"
+                return 0
+            fi
+        fi
+    done
+    
+    echo -e "${YELLOW}⚠️  uv package manager not found${NC}"
+    return 1
+}
+
+# Setup PATH for uv
+setup_uv_path() {
+    # Add uv to PATH for current session
+    export PATH="$HOME/.cargo/bin:$PATH"
+    
+    # Also add to common shell configurations
+    local SHELL_NAME=$(basename "$SHELL")
+    local UPDATED_SHELL_CONFIG=false
+    
+    # Update appropriate shell configuration
+    case "$SHELL_NAME" in
+        bash)
+            if [ -f "$HOME/.bashrc" ]; then
+                if ! grep -q ".cargo/bin" "$HOME/.bashrc"; then
+                    echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> "$HOME/.bashrc"
+                    UPDATED_SHELL_CONFIG=true
+                fi
+            fi
+            if [ -f "$HOME/.profile" ] && ! grep -q ".cargo/bin" "$HOME/.profile"; then
+                echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> "$HOME/.profile"
+                UPDATED_SHELL_CONFIG=true
+            fi
+            ;;
+        zsh)
+            if [ -f "$HOME/.zshrc" ]; then
+                if ! grep -q ".cargo/bin" "$HOME/.zshrc"; then
+                    echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> "$HOME/.zshrc"
+                    UPDATED_SHELL_CONFIG=true
+                fi
+            fi
+            ;;
+        fish)
+            if [ -d "$HOME/.config/fish" ]; then
+                if ! grep -q ".cargo/bin" "$HOME/.config/fish/config.fish" 2>/dev/null; then
+                    echo 'set -gx PATH $HOME/.cargo/bin $PATH' >> "$HOME/.config/fish/config.fish"
+                    UPDATED_SHELL_CONFIG=true
+                fi
+            fi
+            ;;
+    esac
+    
+    if [ "$UPDATED_SHELL_CONFIG" = true ]; then
+        echo -e "${GREEN}✓ Updated shell configuration to include uv in PATH${NC}"
+    fi
 }
 
 # Install uv package manager
@@ -432,21 +493,43 @@ install_uv() {
     echo -e "${BLUE}uv is a fast Python package manager recommended for SuperClaude${NC}"
     echo -e "${BLUE}It provides better caching and performance than pip${NC}"
     
+    # Check if uv is already installed but not in PATH
+    if [ -f "$HOME/.cargo/bin/uv" ]; then
+        echo -e "${YELLOW}uv is already installed but may not be in PATH${NC}"
+        setup_uv_path
+        
+        # Re-check after setting PATH
+        if command -v uv &> /dev/null; then
+            echo -e "${GREEN}✓ uv is now available${NC}"
+            uv --version
+            return 0
+        fi
+    fi
+    
     # Install uv using the official installer (same as SuperClaude guide)
     if curl -Ls https://astral.sh/uv/install.sh | sh; then
         echo -e "${GREEN}✓ uv installed successfully${NC}"
         
-        # Add uv to PATH for current session
-        export PATH="$HOME/.cargo/bin:$PATH"
+        # Setup PATH
+        setup_uv_path
         
         # Verify installation
         if command -v uv &> /dev/null; then
             echo -e "${GREEN}✓ uv is now available in PATH${NC}"
+            uv --version
             return 0
         else
-            echo -e "${YELLOW}⚠️  uv installed but not in PATH. Please restart your terminal or run:${NC}"
-            echo -e "${BLUE}export PATH=\"\$HOME/.cargo/bin:\$PATH\"${NC}"
-            return 1
+            # Try one more time with direct path
+            if [ -x "$HOME/.cargo/bin/uv" ]; then
+                echo -e "${GREEN}✓ uv installed at: $HOME/.cargo/bin/uv${NC}"
+                echo -e "${YELLOW}Using direct path for this session${NC}"
+                # Create an alias for this session
+                alias uv="$HOME/.cargo/bin/uv"
+                return 0
+            else
+                echo -e "${RED}❌ uv installation verification failed${NC}"
+                return 1
+            fi
         fi
     else
         echo -e "${RED}❌ Failed to install uv${NC}"
@@ -534,12 +617,22 @@ install_superclaude() {
     
     # Check if uv is available, install if not
     if ! command -v uv &> /dev/null; then
-        echo -e "${YELLOW}uv not found. Installing uv first...${NC}"
-        if ! install_uv; then
-            echo -e "${RED}❌ Failed to install uv. Falling back to pip...${NC}"
-        else
-            # Update PATH for current session
-            export PATH="$HOME/.cargo/bin:$PATH"
+        # Check common installation locations
+        UV_FOUND=false
+        for UV_PATH in "$HOME/.cargo/bin/uv" "$HOME/.local/bin/uv"; do
+            if [ -x "$UV_PATH" ]; then
+                echo -e "${YELLOW}uv found at $UV_PATH but not in PATH. Setting up PATH...${NC}"
+                export PATH="$(dirname "$UV_PATH"):$PATH"
+                UV_FOUND=true
+                break
+            fi
+        done
+        
+        if [ "$UV_FOUND" = false ]; then
+            echo -e "${YELLOW}uv not found. Installing uv first...${NC}"
+            if ! install_uv; then
+                echo -e "${RED}❌ Failed to install uv. Falling back to pip...${NC}"
+            fi
         fi
     fi
     
@@ -553,6 +646,18 @@ install_superclaude() {
         else
             # Not in venv, use --system flag
             UV_INSTALL_CMD="uv pip install --system SuperClaude"
+        fi
+        
+        # If uv is not in PATH but exists, use full path
+        if ! command -v uv &> /dev/null; then
+            for UV_PATH in "$HOME/.cargo/bin/uv" "$HOME/.local/bin/uv"; do
+                if [ -x "$UV_PATH" ]; then
+                    echo -e "${YELLOW}Using uv with full path: $UV_PATH${NC}"
+                    # Replace 'uv' in the command with the full path
+                    UV_INSTALL_CMD=$(echo "$UV_INSTALL_CMD" | sed "s|^uv |$UV_PATH |")
+                    break
+                fi
+            done
         fi
         
         echo -e "${BLUE}Running: $UV_INSTALL_CMD${NC}"
