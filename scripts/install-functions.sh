@@ -443,6 +443,7 @@ PYTHON_SCRIPT
   }
 }
 EOF
+            fi
         fi
     else
         # Create new configuration
@@ -487,7 +488,9 @@ PYTHON_SCRIPT
   }
 }
 EOF
-        echo -e "${GREEN}✓ Created Claude configuration with MCP server${NC}"
+                echo -e "${GREEN}✓ Created Claude configuration with MCP server${NC}"
+            fi
+        fi
     fi
     
     # Also create project-specific configuration if in a project directory
