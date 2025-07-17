@@ -27,7 +27,7 @@ export interface ExecutionResult {
 
 export class SuperClaudeBridge extends EventEmitter {
   private superclaudePath: string | null;
-  private pythonPath: string;
+  private pythonCommand: string = 'python3';
   private cacheEnabled: boolean;
   private cache: Map<string, ExecutionResult> = new Map();
   private configManager: ConfigManager;
@@ -38,11 +38,25 @@ export class SuperClaudeBridge extends EventEmitter {
     
     const config = this.configManager.getSuperClaudeConfig();
     this.superclaudePath = superclaudePath || config.path;
-    this.pythonPath = config.pythonPath;
+    this.pythonCommand = config.pythonPath || 'python3';
     this.cacheEnabled = this.configManager.getExecutionConfig().cacheEnabled;
+    
+    // Check if we're in a virtual environment
+    if (process.env.VIRTUAL_ENV) {
+      this.pythonCommand = path.join(process.env.VIRTUAL_ENV, 'bin', 'python');
+      this.emit('info', `Using virtual environment Python: ${this.pythonCommand}`);
+    }
     
     // Log configuration for debugging
     this.emit('info', `SuperClaude config: ${JSON.stringify(config, null, 2)}`);
+  }
+  
+  /**
+   * Set the Python command to use (for virtual environments)
+   */
+  setPythonCommand(pythonCmd: string): void {
+    this.pythonCommand = pythonCmd;
+    this.emit('info', `Python command updated to: ${pythonCmd}`);
   }
 
 
@@ -50,18 +64,29 @@ export class SuperClaudeBridge extends EventEmitter {
    * Validate SuperClaude installation
    */
   async validate(): Promise<boolean> {
-    // If no SuperClaude path found, we're in standalone mode - that's OK
-    if (!this.superclaudePath) {
-      this.emit('info', 'Running in standalone mode - validation skipped');
-      return true; // Return true to allow standalone operation
-    }
-    
     try {
-      const result = await this.execute({ command: '--version' });
-      return result.success;
+      // Try to validate Python module installation
+      const { stdout } = await execAsync(
+        `${this.pythonCommand} -c "import SuperClaude; print('valid')"`
+      );
+      
+      if (stdout.includes('valid')) {
+        this.emit('info', 'SuperClaude Python module validated successfully');
+        return true;
+      }
+      
+      // If module validation fails but we have a path, try path-based validation
+      if (this.superclaudePath) {
+        const result = await this.execute({ command: '--version' });
+        return result.success;
+      }
+      
+      return false;
     } catch (error) {
       this.emit('error', `Validation failed: ${error}`);
-      return false;
+      // Allow standalone mode
+      this.emit('info', 'Running in standalone mode - validation skipped');
+      return true;
     }
   }
 
@@ -69,16 +94,6 @@ export class SuperClaudeBridge extends EventEmitter {
    * Execute SuperClaude command via subprocess
    */
   async execute(command: SuperClaudeCommand): Promise<ExecutionResult> {
-    // If no SuperClaude path, return standalone mode response
-    if (!this.superclaudePath) {
-      return {
-        success: true,
-        output: 'SuperClaude Enterprise running in standalone mode',
-        error: '',
-        exitCode: 0
-      };
-    }
-    
     const cacheKey = JSON.stringify(command);
     
     // Check cache
@@ -88,28 +103,8 @@ export class SuperClaudeBridge extends EventEmitter {
     }
 
     return new Promise((resolve) => {
-      // Try to find the correct entry point
-      const possibleEntryPoints = [
-        path.join(this.superclaudePath!, 'SuperClaude', '__main__.py'),
-        path.join(this.superclaudePath!, 'setup.py'),
-        path.join(this.superclaudePath!, 'SuperClaude.py')
-      ];
-      
-      let entryPoint = '';
-      const fs = require('fs');
-      for (const ep of possibleEntryPoints) {
-        if (fs.existsSync(ep)) {
-          entryPoint = ep;
-          break;
-        }
-      }
-      
-      if (!entryPoint) {
-        // If no entry point found, run in module mode
-        entryPoint = '-m';
-      }
-      
-      const args = entryPoint === '-m' ? ['-m', 'SuperClaude'] : [entryPoint];
+      // Always use module execution for installed SuperClaude
+      const args = ['-m', 'SuperClaude'];
       
       // Add main command
       if (command.command) {
@@ -131,10 +126,14 @@ export class SuperClaudeBridge extends EventEmitter {
         args.push(...command.args);
       }
 
-      this.emit('executing', { command: args.join(' ') });
+      this.emit('executing', { 
+        command: `${this.pythonCommand} ${args.join(' ')}`,
+        pythonCommand: this.pythonCommand 
+      });
 
-      const childProcess = spawn(this.pythonPath, args, {
-        cwd: this.superclaudePath || process.cwd(),
+      // Use the correct Python command (handles virtual environments)
+      const childProcess = spawn(this.pythonCommand, args, {
+        cwd: process.cwd(),
         env: { ...process.env }
       });
 

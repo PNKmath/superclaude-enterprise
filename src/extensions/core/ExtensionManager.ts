@@ -329,12 +329,36 @@ export class ExtensionManager {
   
   private async verifySuperClaude(): Promise<void> {
     try {
-      await fs.access(this.superClaudePath);
-      this.logger.info(`SuperClaude installation verified at: ${this.superClaudePath}`);
-    } catch {
+      // Check if SuperClaude is installed as a Python package
+      const { exec } = require('child_process');
+      const { promisify } = require('util');
+      const execAsync = promisify(exec);
+      
+      // Check if we're in a virtual environment
+      const venvPath = process.env.VIRTUAL_ENV;
+      let pythonCmd = 'python3';
+      
+      if (venvPath) {
+        // Use the virtual environment's Python
+        pythonCmd = path.join(venvPath, 'bin', 'python');
+        this.logger.info(`Using virtual environment Python: ${pythonCmd}`);
+      }
+      
+      // Try to import SuperClaude
+      const checkCmd = `${pythonCmd} -c "import SuperClaude; print('SuperClaude found')"`;
+      const { stdout } = await execAsync(checkCmd);
+      
+      if (stdout.includes('SuperClaude found')) {
+        this.logger.info('SuperClaude Python package verified');
+        // Update the bridge to use Python module execution
+        this.superClaudeBridge.setPythonCommand(pythonCmd);
+      } else {
+        throw new Error('SuperClaude module not found');
+      }
+    } catch (error) {
       this.logger.warn('SuperClaude not found. Running in standalone mode.');
+      this.logger.debug({ error }, 'SuperClaude verification error');
       // Don't throw error - allow standalone operation
-      // throw new Error('SuperClaude not found. Please run install script first.');
     }
   }
 
