@@ -12,15 +12,16 @@ An advanced enterprise extension for SuperClaude v3 that provides intelligent pe
 ## 🚀 Quick Start
 
 ```bash
-# 1. 클론 및 설치
+# 1. 클론 및 설치 (모든 것이 자동으로 설정됨!)
 git clone https://github.com/PNKmath/superclaude-enterprise.git
 cd superclaude-enterprise
-./install-enterprise.sh
+./install-enterprise.sh  # ← 이 명령 하나로 MCP 서버까지 자동 설정!
 
-# 2. Claude Code 재시작 (MCP 서버가 자동으로 등록됨)
-# 설치 스크립트가 ~/.config/claude/mcp.json에 자동으로 설정을 추가합니다.
-# 수동 등록이 필요한 경우:
-# claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
+# 2. Claude Code 재시작하기만 하면 끝!
+# 설치 스크립트가 자동으로:
+#   - npm 패키지 설치 ✓
+#   - 프로젝트 빌드 ✓
+#   - MCP 서버를 ~/.config/claude/mcp.json에 등록 ✓
 
 # 3. Claude Code에서 자연어로 사용!
 # Claude Code에 자연어로 요청:
