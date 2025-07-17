@@ -89,6 +89,118 @@ check_jq() {
     return 0
 }
 
+# Check system stability
+check_system_stability() {
+    echo -e "\n${YELLOW}Checking system stability...${NC}"
+    
+    local ISSUES_FOUND=0
+    
+    # Check for package manager locks
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        if command -v apt-get &> /dev/null; then
+            # Check for dpkg/apt locks
+            if sudo lsof /var/lib/dpkg/lock-frontend 2>/dev/null || \
+               sudo lsof /var/lib/apt/lists/lock 2>/dev/null; then
+                echo -e "${YELLOW}⚠ Package manager is locked by another process${NC}"
+                ISSUES_FOUND=$((ISSUES_FOUND + 1))
+            fi
+            
+            # Check for interrupted dpkg
+            if [ -f /var/lib/dpkg/status ] && grep -q "half-installed\|half-configured" /var/lib/dpkg/status 2>/dev/null; then
+                echo -e "${YELLOW}⚠ Incomplete package installations detected${NC}"
+                echo -e "${BLUE}  Try: sudo dpkg --configure -a${NC}"
+                ISSUES_FOUND=$((ISSUES_FOUND + 1))
+            fi
+            
+            # Test mirror connectivity
+            echo -e "${BLUE}Testing package mirror connectivity...${NC}"
+            if ! curl -s -I "http://archive.ubuntu.com/ubuntu/" | grep -q "200 OK" 2>/dev/null; then
+                echo -e "${YELLOW}⚠ Ubuntu archive mirror may be unreachable${NC}"
+                ISSUES_FOUND=$((ISSUES_FOUND + 1))
+            fi
+        fi
+    fi
+    
+    # Check disk space
+    AVAILABLE_SPACE=$(df -BG . | awk 'NR==2 {print $4}' | sed 's/G//')
+    if [ "$AVAILABLE_SPACE" -lt 1 ]; then
+        echo -e "${YELLOW}⚠ Low disk space: ${AVAILABLE_SPACE}GB available${NC}"
+        echo -e "${BLUE}  At least 1GB recommended for installation${NC}"
+        ISSUES_FOUND=$((ISSUES_FOUND + 1))
+    fi
+    
+    # Check system load
+    if command -v uptime &> /dev/null; then
+        LOAD_AVG=$(uptime | awk -F'load average:' '{print $2}' | awk -F, '{print $1}' | xargs)
+        LOAD_INT=$(echo "$LOAD_AVG" | cut -d. -f1)
+        CPU_COUNT=$(nproc 2>/dev/null || echo 1)
+        
+        if [ "$LOAD_INT" -gt "$((CPU_COUNT * 2))" ]; then
+            echo -e "${YELLOW}⚠ High system load detected: $LOAD_AVG${NC}"
+            echo -e "${BLUE}  Consider waiting for system load to decrease${NC}"
+            ISSUES_FOUND=$((ISSUES_FOUND + 1))
+        fi
+    fi
+    
+    if [ $ISSUES_FOUND -eq 0 ]; then
+        echo -e "${GREEN}✓ System appears stable${NC}"
+        return 0
+    else
+        echo -e "${YELLOW}⚠ Found $ISSUES_FOUND potential system issues${NC}"
+        echo -e "${BLUE}Installation can continue, but may encounter problems.${NC}"
+        echo -n "Continue anyway? (y/n): "
+        read -r response
+        if [[ "$response" =~ ^[Yy]$ ]]; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+# Try to fix apt issues
+try_fix_apt_issues() {
+    echo -e "\n${YELLOW}Attempting to fix apt issues...${NC}"
+    
+    # Try to fix dpkg interruptions
+    if sudo dpkg --configure -a 2>/dev/null; then
+        echo -e "${GREEN}✓ Fixed dpkg configuration${NC}"
+    fi
+    
+    # Clear apt cache
+    if sudo apt-get clean 2>/dev/null; then
+        echo -e "${GREEN}✓ Cleared apt cache${NC}"
+    fi
+    
+    # Try alternative mirrors
+    if [ -f /etc/apt/sources.list ]; then
+        # Backup current sources
+        sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup.$(date +%Y%m%d%H%M%S)
+        
+        # Try to use a different mirror
+        echo -e "${YELLOW}Trying alternative package mirrors...${NC}"
+        
+        # Get current Ubuntu codename
+        UBUNTU_CODENAME=$(lsb_release -cs 2>/dev/null || echo "jammy")
+        
+        # Try mirror.ubuntu.com instead of archive.ubuntu.com
+        if sudo sed -i.bak 's|http://archive.ubuntu.com|http://mirror.ubuntu.com|g' /etc/apt/sources.list 2>/dev/null; then
+            echo -e "${BLUE}Switched to mirror.ubuntu.com${NC}"
+            
+            # Try update with new mirror
+            if sudo apt-get update 2>/dev/null; then
+                echo -e "${GREEN}✓ Successfully updated with alternative mirror${NC}"
+                return 0
+            fi
+        fi
+        
+        # If that didn't work, restore original
+        sudo mv /etc/apt/sources.list.backup.* /etc/apt/sources.list 2>/dev/null
+    fi
+    
+    return 1
+}
+
 # Install jq
 install_jq() {
     echo -e "\n${YELLOW}Installing jq (JSON processor)...${NC}"
@@ -155,17 +267,50 @@ install_jq() {
         fi
     fi
     
-    # Try system package manager
+    # Try system package manager with error handling
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Linux
         if command -v apt-get &> /dev/null; then
             # Debian/Ubuntu
             echo -e "${YELLOW}Installing jq using apt...${NC}"
-            if sudo apt-get update && sudo apt-get install -y jq 2>/dev/null; then
-                echo -e "${GREEN}✓ jq installed successfully${NC}"
-                return 0
+            
+            # Try apt update with error handling for mirror sync issues
+            APT_UPDATE_OUTPUT=$(sudo apt-get update 2>&1)
+            APT_UPDATE_EXIT=$?
+            
+            if echo "$APT_UPDATE_OUTPUT" | grep -E "Mirror sync in progress|File has unexpected size|Hash Sum mismatch" > /dev/null; then
+                echo -e "${YELLOW}⚠ Package mirror synchronization issue detected${NC}"
+                echo -e "${YELLOW}This is a temporary issue with Ubuntu mirrors.${NC}"
+                echo -e "${BLUE}Attempting alternative installation methods...${NC}"
+                
+                # Try with --fix-missing
+                echo -e "${YELLOW}Trying apt update with --fix-missing...${NC}"
+                if sudo apt-get update --fix-missing 2>/dev/null; then
+                    if sudo apt-get install -y jq 2>/dev/null; then
+                        echo -e "${GREEN}✓ jq installed successfully${NC}"
+                        return 0
+                    fi
+                fi
+                
+                # Skip to binary installation
+                echo -e "${YELLOW}Skipping apt due to mirror issues, using binary installation...${NC}"
+                if install_jq_binary; then
+                    return 0
+                fi
+            elif [ $APT_UPDATE_EXIT -eq 0 ]; then
+                # apt update succeeded, try to install
+                if sudo apt-get install -y jq 2>/dev/null; then
+                    echo -e "${GREEN}✓ jq installed successfully${NC}"
+                    return 0
+                else
+                    echo -e "${YELLOW}apt install failed, trying binary installation...${NC}"
+                    if install_jq_binary; then
+                        return 0
+                    fi
+                fi
             else
-                echo -e "${YELLOW}apt install failed, trying binary installation...${NC}"
+                # Other apt update failures
+                echo -e "${YELLOW}apt update failed, trying binary installation...${NC}"
                 if install_jq_binary; then
                     return 0
                 fi
