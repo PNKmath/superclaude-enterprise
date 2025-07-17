@@ -93,27 +93,94 @@ check_jq() {
 install_jq() {
     echo -e "\n${YELLOW}Installing jq (JSON processor)...${NC}"
     
-    # Detect OS and install accordingly
+    # Check if system package manager is locked
+    check_system_lock() {
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            # Check for apt/dpkg lock
+            if command -v apt-get &> /dev/null; then
+                if sudo lsof /var/lib/dpkg/lock-frontend 2>/dev/null || \
+                   sudo lsof /var/lib/apt/lists/lock 2>/dev/null || \
+                   sudo lsof /var/cache/apt/archives/lock 2>/dev/null; then
+                    echo -e "${RED}❌ System package manager is locked${NC}"
+                    echo -e "${YELLOW}Another process is using apt/dpkg. Please wait or try:${NC}"
+                    echo "  sudo killall apt apt-get dpkg"
+                    echo "  Or wait for the other process to complete"
+                    return 1
+                fi
+            fi
+        fi
+        return 0
+    }
+    
+    # Try to install jq with various methods
+    install_jq_binary() {
+        echo -e "${YELLOW}Attempting to install jq from binary release...${NC}"
+        
+        # Detect architecture
+        ARCH=$(uname -m)
+        case $ARCH in
+            x86_64) JQ_ARCH="amd64" ;;
+            aarch64) JQ_ARCH="arm64" ;;
+            arm*) JQ_ARCH="arm" ;;
+            *) JQ_ARCH="amd64" ;;
+        esac
+        
+        # Download jq binary directly
+        JQ_VERSION="1.7.1"
+        JQ_URL="https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-linux-${JQ_ARCH}"
+        
+        echo -e "${BLUE}Downloading jq from: $JQ_URL${NC}"
+        if curl -L -o /tmp/jq "$JQ_URL" 2>/dev/null || wget -O /tmp/jq "$JQ_URL" 2>/dev/null; then
+            chmod +x /tmp/jq
+            # Try to move to system location, fall back to user location
+            if sudo mv /tmp/jq /usr/local/bin/jq 2>/dev/null; then
+                echo -e "${GREEN}✓ jq installed to /usr/local/bin/jq${NC}"
+                return 0
+            elif mkdir -p "$HOME/.local/bin" && mv /tmp/jq "$HOME/.local/bin/jq"; then
+                echo -e "${GREEN}✓ jq installed to ~/.local/bin/jq${NC}"
+                echo -e "${YELLOW}Make sure ~/.local/bin is in your PATH${NC}"
+                export PATH="$HOME/.local/bin:$PATH"
+                return 0
+            fi
+        fi
+        
+        return 1
+    }
+    
+    # First check if system is locked
+    if ! check_system_lock; then
+        echo -e "${YELLOW}Trying alternative installation method...${NC}"
+        if install_jq_binary; then
+            return 0
+        fi
+    fi
+    
+    # Try system package manager
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # Linux
         if command -v apt-get &> /dev/null; then
             # Debian/Ubuntu
             echo -e "${YELLOW}Installing jq using apt...${NC}"
-            if sudo apt-get update && sudo apt-get install -y jq; then
+            if sudo apt-get update && sudo apt-get install -y jq 2>/dev/null; then
                 echo -e "${GREEN}✓ jq installed successfully${NC}"
                 return 0
+            else
+                echo -e "${YELLOW}apt install failed, trying binary installation...${NC}"
+                if install_jq_binary; then
+                    return 0
+                fi
             fi
         elif command -v yum &> /dev/null; then
             # RHEL/CentOS
             echo -e "${YELLOW}Installing jq using yum...${NC}"
-            if sudo yum install -y jq; then
+            if sudo yum install -y jq 2>/dev/null; then
                 echo -e "${GREEN}✓ jq installed successfully${NC}"
                 return 0
             fi
         elif command -v pacman &> /dev/null; then
             # Arch Linux
             echo -e "${YELLOW}Installing jq using pacman...${NC}"
-            if sudo pacman -S --noconfirm jq; then
+            if sudo pacman -S --noconfirm jq 2>/dev/null; then
                 echo -e "${GREEN}✓ jq installed successfully${NC}"
                 return 0
             fi
@@ -122,19 +189,17 @@ install_jq() {
         # macOS
         if command -v brew &> /dev/null; then
             echo -e "${YELLOW}Installing jq using Homebrew...${NC}"
-            if brew install jq; then
+            if brew install jq 2>/dev/null; then
                 echo -e "${GREEN}✓ jq installed successfully${NC}"
                 return 0
             fi
         fi
     fi
     
-    # If we couldn't install automatically, provide manual instructions
+    # If all methods failed
     echo -e "${RED}❌ Could not install jq automatically${NC}"
-    echo -e "${YELLOW}Please install jq manually:${NC}"
-    echo "  - Linux: sudo apt-get install jq (or yum/pacman)"
-    echo "  - macOS: brew install jq"
-    echo "  - Or download from: https://stedolan.github.io/jq/download/"
+    echo -e "${YELLOW}But don't worry! We'll use Python for JSON processing instead.${NC}"
+    echo -e "${BLUE}jq is optional - the installation will continue without it.${NC}"
     return 1
 }
 
