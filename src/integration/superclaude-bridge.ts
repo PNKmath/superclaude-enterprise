@@ -7,6 +7,7 @@ import { spawn, exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import { EventEmitter } from 'events';
+import { ConfigManager } from '../config/config-manager';
 
 const execAsync = promisify(exec);
 
@@ -25,73 +26,25 @@ export interface ExecutionResult {
 }
 
 export class SuperClaudeBridge extends EventEmitter {
-  private superclaudePath: string;
-  private pythonPath: string = 'python3';
-  private cacheEnabled: boolean = true;
+  private superclaudePath: string | null;
+  private pythonPath: string;
+  private cacheEnabled: boolean;
   private cache: Map<string, ExecutionResult> = new Map();
+  private configManager: ConfigManager;
 
   constructor(superclaudePath?: string) {
     super();
-    this.superclaudePath = superclaudePath || this.findSuperClaudePath();
-    // Use virtual environment Python if available
-    this.pythonPath = this.findPythonPath();
+    this.configManager = ConfigManager.getInstance();
+    
+    const config = this.configManager.getSuperClaudeConfig();
+    this.superclaudePath = superclaudePath || config.path;
+    this.pythonPath = config.pythonPath;
+    this.cacheEnabled = this.configManager.getExecutionConfig().cacheEnabled;
+    
+    // Log configuration for debugging
+    this.emit('info', `SuperClaude config: ${JSON.stringify(config, null, 2)}`);
   }
 
-  private findPythonPath(): string {
-    const fs = require('fs');
-    const possiblePaths = [
-      path.join(path.dirname(this.superclaudePath || '.'), 'venv', 'bin', 'python3'),
-      path.join(path.dirname(this.superclaudePath || '.'), 'venv', 'bin', 'python'),
-      path.join(path.dirname(this.superclaudePath || '.'), '..', 'venv', 'bin', 'python3'),
-      path.join(path.dirname(this.superclaudePath || '.'), '..', 'venv', 'bin', 'python'),
-      'python3',
-      'python'
-    ];
-
-    for (const p of possiblePaths) {
-      try {
-        if (fs.existsSync(p)) {
-          this.emit('info', `Using Python at: ${p}`);
-          return p;
-        }
-      } catch (e) {
-        // Continue searching
-      }
-    }
-
-    return 'python3'; // fallback
-  }
-
-  /**
-   * Find SuperClaude installation path
-   */
-  private findSuperClaudePath(): string {
-    const possiblePaths = [
-      path.join(__dirname, '..', '..', '..', 'SuperClaude'),
-      path.join(process.env.HOME || '', '.claude', 'SuperClaude'),
-      '/opt/SuperClaude',
-      path.join(process.cwd(), 'SuperClaude')
-    ];
-
-    for (const p of possiblePaths) {
-      try {
-        const fs = require('fs');
-        // Check for setup.py or SuperClaude directory instead of SuperClaude.py
-        if (fs.existsSync(path.join(p, 'setup.py')) || 
-            fs.existsSync(path.join(p, 'SuperClaude')) ||
-            fs.existsSync(path.join(p, 'pyproject.toml'))) {
-          this.emit('info', `Found SuperClaude at: ${p}`);
-          return p;
-        }
-      } catch (e) {
-        // Continue searching
-      }
-    }
-
-    // Return null instead of throwing error - allow standalone operation
-    this.emit('info', 'SuperClaude not found - running in standalone mode');
-    return '';
-  }
 
   /**
    * Validate SuperClaude installation
@@ -137,9 +90,9 @@ export class SuperClaudeBridge extends EventEmitter {
     return new Promise((resolve) => {
       // Try to find the correct entry point
       const possibleEntryPoints = [
-        path.join(this.superclaudePath, 'SuperClaude', '__main__.py'),
-        path.join(this.superclaudePath, 'setup.py'),
-        path.join(this.superclaudePath, 'SuperClaude.py')
+        path.join(this.superclaudePath!, 'SuperClaude', '__main__.py'),
+        path.join(this.superclaudePath!, 'setup.py'),
+        path.join(this.superclaudePath!, 'SuperClaude.py')
       ];
       
       let entryPoint = '';
@@ -181,7 +134,7 @@ export class SuperClaudeBridge extends EventEmitter {
       this.emit('executing', { command: args.join(' ') });
 
       const childProcess = spawn(this.pythonPath, args, {
-        cwd: this.superclaudePath,
+        cwd: this.superclaudePath || process.cwd(),
         env: { ...process.env }
       });
 
