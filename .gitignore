@@ -54,6 +54,23 @@ SuperClaude/
 config/enterprise.config.json
 !config/enterprise.config.default.json
 
+# Python virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# SuperClaude installation artifacts
+.claude/backups/
+.claude/.superclaude-metadata.json
+IMPROVEMENT_PLAN.md
+
 # Claude Code hooks
 .claude/settings.local.json
 !.claude/settings.json

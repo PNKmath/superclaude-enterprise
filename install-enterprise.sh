@@ -65,6 +65,22 @@ check_prerequisites() {
 setup_superclaude() {
     echo -e "\n${YELLOW}Setting up SuperClaude...${NC}"
     
+    # Check if virtual environment exists, create if not
+    if [ ! -d "venv" ]; then
+        echo "  Creating virtual environment..."
+        python3 -m venv venv || {
+            echo -e "${RED}❌ Failed to create virtual environment${NC}"
+            echo "  Please install python3-venv: sudo apt install python3-venv"
+            exit 1
+        }
+    fi
+    
+    # Activate virtual environment
+    source venv/bin/activate || {
+        echo -e "${RED}❌ Failed to activate virtual environment${NC}"
+        exit 1
+    }
+    
     if [ -d "SuperClaude" ]; then
         echo -e "${GREEN}✓ SuperClaude directory exists${NC}"
         cd SuperClaude
@@ -75,20 +91,17 @@ setup_superclaude() {
             git pull origin main || true
         fi
         
-        # Check if SuperClaude is installed
-        if ! python3 -c "import SuperClaude" 2>/dev/null; then
-            echo "  Installing SuperClaude package..."
-            pip install . || {
-                echo -e "${YELLOW}⚠️  SuperClaude package installation failed${NC}"
-            }
-            # Run the installer - this will ask for user input
-            echo "  Configuring SuperClaude for Claude Code..."
-            python3 -m SuperClaude install || {
-                echo -e "${YELLOW}⚠️  SuperClaude configuration failed, continuing anyway...${NC}"
-            }
-        else
-            echo -e "${GREEN}✓ SuperClaude already installed${NC}"
-        fi
+        # Install SuperClaude in development mode
+        echo "  Installing SuperClaude package in development mode..."
+        pip install -e . || {
+            echo -e "${YELLOW}⚠️  SuperClaude package installation failed${NC}"
+        }
+        
+        # Run the installer with local installation directory
+        echo "  Configuring SuperClaude for Claude Code..."
+        python3 -m SuperClaude install --force --yes --components core commands --install-dir ../.claude || {
+            echo -e "${YELLOW}⚠️  SuperClaude configuration failed, continuing anyway...${NC}"
+        }
         
         cd ..
     else
@@ -96,19 +109,23 @@ setup_superclaude() {
         git clone https://github.com/NomenAK/SuperClaude.git
         cd SuperClaude
         
-        echo "  Installing SuperClaude package..."
-        pip install . || {
+        echo "  Installing SuperClaude package in development mode..."
+        pip install -e . || {
             echo -e "${YELLOW}⚠️  SuperClaude package installation failed${NC}"
         }
-        # Run the installer - this will ask for user input
+        
+        # Run the installer with local installation directory
         echo "  Configuring SuperClaude for Claude Code..."
-        python3 -m SuperClaude install || {
+        python3 -m SuperClaude install --force --yes --components core commands --install-dir ../.claude || {
             echo -e "${YELLOW}⚠️  SuperClaude configuration failed, continuing anyway...${NC}"
         }
         
         cd ..
         echo -e "${GREEN}✓ SuperClaude v3 setup completed${NC}"
     fi
+    
+    # Deactivate virtual environment
+    deactivate
 }
 
 # Install dependencies

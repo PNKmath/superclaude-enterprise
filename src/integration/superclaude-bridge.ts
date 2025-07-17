@@ -33,6 +33,33 @@ export class SuperClaudeBridge extends EventEmitter {
   constructor(superclaudePath?: string) {
     super();
     this.superclaudePath = superclaudePath || this.findSuperClaudePath();
+    // Use virtual environment Python if available
+    this.pythonPath = this.findPythonPath();
+  }
+
+  private findPythonPath(): string {
+    const fs = require('fs');
+    const possiblePaths = [
+      path.join(path.dirname(this.superclaudePath || '.'), 'venv', 'bin', 'python3'),
+      path.join(path.dirname(this.superclaudePath || '.'), 'venv', 'bin', 'python'),
+      path.join(path.dirname(this.superclaudePath || '.'), '..', 'venv', 'bin', 'python3'),
+      path.join(path.dirname(this.superclaudePath || '.'), '..', 'venv', 'bin', 'python'),
+      'python3',
+      'python'
+    ];
+
+    for (const p of possiblePaths) {
+      try {
+        if (fs.existsSync(p)) {
+          this.emit('info', `Using Python at: ${p}`);
+          return p;
+        }
+      } catch (e) {
+        // Continue searching
+      }
+    }
+
+    return 'python3'; // fallback
   }
 
   /**
