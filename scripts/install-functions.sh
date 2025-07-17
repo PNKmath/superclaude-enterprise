@@ -232,45 +232,76 @@ install_superclaude() {
 setup_mcp_config() {
     echo -e "\n${YELLOW}Setting up MCP configuration...${NC}"
     
-    # Use config-helper.js if available
-    if [ -f "scripts/config-helper.js" ] && [ -f "dist/config/config-manager.js" ]; then
-        MCP_DIR=$(node scripts/config-helper.js get mcp.configDir 2>/dev/null | tr -d '"')
-    fi
+    # Claude Code uses ~/.claude.json for configuration
+    CLAUDE_CONFIG="$HOME/.claude.json"
+    INSTALL_PATH=$(pwd)
     
-    # Fallback to default
-    if [ -z "$MCP_DIR" ]; then
-        if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            MCP_DIR="$HOME/.config/claude"
+    echo -e "${BLUE}Configuring MCP server in Claude Code settings...${NC}"
+    
+    # Check if ~/.claude.json exists
+    if [ -f "$CLAUDE_CONFIG" ]; then
+        echo -e "${BLUE}Found existing Claude configuration${NC}"
+        # Backup existing config
+        cp "$CLAUDE_CONFIG" "$CLAUDE_CONFIG.backup.$(date +%Y%m%d%H%M%S)"
+        
+        # Use jq to add/update MCP server configuration if available
+        if command -v jq &> /dev/null; then
+            # Add or update the mcpServers configuration
+            jq --arg path "$INSTALL_PATH" '.mcpServers = (.mcpServers // {}) | .mcpServers["superclaude-enterprise"] = {
+                "command": "node",
+                "args": [$path + "/dist/mcp-server/index.js"],
+                "description": "SuperClaude Enterprise MCP Server"
+            }' "$CLAUDE_CONFIG" > "$CLAUDE_CONFIG.tmp" && mv "$CLAUDE_CONFIG.tmp" "$CLAUDE_CONFIG"
+            echo -e "${GREEN}✓ Updated Claude configuration with MCP server${NC}"
         else
-            MCP_DIR="$APPDATA/Claude"
-        fi
-    fi
-    
-    echo -e "${BLUE}Creating MCP configuration at: $MCP_DIR${NC}"
-    mkdir -p "$MCP_DIR"
-    
-    # Create MCP config
-    cat > "$MCP_DIR/mcp.json" << 'EOF'
+            echo -e "${YELLOW}⚠️  jq not found. Please manually add MCP server to $CLAUDE_CONFIG${NC}"
+            echo -e "${BLUE}Add this to your ~/.claude.json:${NC}"
+            cat << EOF
 {
-  "servers": {
+  "mcpServers": {
     "superclaude-enterprise": {
       "command": "node",
-      "args": ["INSTALL_PATH/dist/mcp-server/index.js"],
-      "description": "SuperClaude Enterprise MCP Server - Advanced natural language command processing"
+      "args": ["$INSTALL_PATH/dist/mcp-server/index.js"],
+      "description": "SuperClaude Enterprise MCP Server"
     }
   }
 }
 EOF
-    
-    # Replace INSTALL_PATH with actual path
-    INSTALL_PATH=$(pwd)
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|INSTALL_PATH|$INSTALL_PATH|g" "$MCP_DIR/mcp.json"
+        fi
     else
-        sed -i "s|INSTALL_PATH|$INSTALL_PATH|g" "$MCP_DIR/mcp.json"
+        # Create new configuration
+        echo -e "${BLUE}Creating new Claude configuration${NC}"
+        cat > "$CLAUDE_CONFIG" << EOF
+{
+  "mcpServers": {
+    "superclaude-enterprise": {
+      "command": "node",
+      "args": ["$INSTALL_PATH/dist/mcp-server/index.js"],
+      "description": "SuperClaude Enterprise MCP Server"
+    }
+  }
+}
+EOF
+        echo -e "${GREEN}✓ Created Claude configuration with MCP server${NC}"
     fi
     
-    echo -e "${GREEN}✓ MCP configuration created${NC}"
+    # Also create project-specific configuration if in a project directory
+    if [ -d ".claude" ] || mkdir -p ".claude" 2>/dev/null; then
+        cat > ".claude/settings.local.json" << EOF
+{
+  "mcpServers": {
+    "superclaude-enterprise": {
+      "command": "node",
+      "args": ["$INSTALL_PATH/dist/mcp-server/index.js"],
+      "description": "SuperClaude Enterprise MCP Server"
+    }
+  }
+}
+EOF
+        echo -e "${GREEN}✓ Created project-specific MCP configuration${NC}"
+    fi
+    
+    echo -e "${GREEN}✓ MCP configuration completed${NC}"
     return 0
 }
 

@@ -22,44 +22,49 @@ else
     exit 1
 fi
 
-# 2. Check MCP config directory
-echo -e "\n${YELLOW}2. Checking MCP configuration...${NC}"
-if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    MCP_DIR="$HOME/.config/claude"
-else
-    MCP_DIR="$APPDATA/Claude"
-fi
+# 2. Check Claude Code configuration
+echo -e "\n${YELLOW}2. Checking Claude Code configuration...${NC}"
+CLAUDE_CONFIG="$HOME/.claude.json"
+PROJECT_CONFIG=".claude/settings.local.json"
 
-if [ -d "$MCP_DIR" ]; then
-    echo -e "${GREEN}✓ MCP config directory exists: $MCP_DIR${NC}"
-else
-    echo -e "${YELLOW}⚠️  MCP config directory not found${NC}"
-    echo "  Creating directory..."
-    mkdir -p "$MCP_DIR"
-fi
-
-# 3. Check MCP config file
-if [ -f "$MCP_DIR/mcp.json" ]; then
-    echo -e "${GREEN}✓ MCP config file exists${NC}"
+# Check global configuration
+if [ -f "$CLAUDE_CONFIG" ]; then
+    echo -e "${GREEN}✓ Global Claude config exists: $CLAUDE_CONFIG${NC}"
     
     # Check if superclaude-enterprise is configured
-    if grep -q "superclaude-enterprise" "$MCP_DIR/mcp.json"; then
-        echo -e "${GREEN}✓ SuperClaude Enterprise is configured${NC}"
-        
-        # Extract and verify path
-        CONFIGURED_PATH=$(grep -A 2 "superclaude-enterprise" "$MCP_DIR/mcp.json" | grep "args" | sed 's/.*"\([^"]*\)".*/\1/')
-        if [ -f "$CONFIGURED_PATH" ]; then
-            echo -e "${GREEN}✓ Configured path is valid: $CONFIGURED_PATH${NC}"
+    if command -v jq &> /dev/null; then
+        if jq -e '.mcpServers["superclaude-enterprise"]' "$CLAUDE_CONFIG" &> /dev/null; then
+            echo -e "${GREEN}✓ SuperClaude Enterprise is configured globally${NC}"
+            
+            # Extract and verify path
+            CONFIGURED_PATH=$(jq -r '.mcpServers["superclaude-enterprise"].args[0]' "$CLAUDE_CONFIG")
+            if [ -f "$CONFIGURED_PATH" ]; then
+                echo -e "${GREEN}✓ Configured path is valid: $CONFIGURED_PATH${NC}"
+            else
+                echo -e "${RED}✗ Configured path is invalid: $CONFIGURED_PATH${NC}"
+                echo "  Current directory: $(pwd)"
+                echo "  Expected path: $(pwd)/dist/mcp-server/index.js"
+            fi
         else
-            echo -e "${RED}✗ Configured path is invalid: $CONFIGURED_PATH${NC}"
-            echo "  Current directory: $(pwd)"
-            echo "  Expected path: $(pwd)/dist/mcp-server/index.js"
+            echo -e "${YELLOW}⚠️  SuperClaude Enterprise not found in global config${NC}"
         fi
     else
-        echo -e "${YELLOW}⚠️  SuperClaude Enterprise not found in MCP config${NC}"
+        # Fallback without jq
+        if grep -q "superclaude-enterprise" "$CLAUDE_CONFIG"; then
+            echo -e "${GREEN}✓ SuperClaude Enterprise appears to be configured${NC}"
+        else
+            echo -e "${YELLOW}⚠️  SuperClaude Enterprise not found in global config${NC}"
+        fi
     fi
 else
-    echo -e "${YELLOW}⚠️  MCP config file not found${NC}"
+    echo -e "${YELLOW}⚠️  Global Claude config not found${NC}"
+fi
+
+# Check project configuration
+if [ -f "$PROJECT_CONFIG" ]; then
+    echo -e "${GREEN}✓ Project-specific config exists: $PROJECT_CONFIG${NC}"
+else
+    echo -e "${BLUE}ℹ️  No project-specific config (optional)${NC}"
 fi
 
 # 4. Test MCP server startup
@@ -83,8 +88,14 @@ echo -e "\n${BLUE}📋 Setup Summary:${NC}"
 echo "===================="
 
 INSTALL_PATH=$(pwd)
-if [ -f "$MCP_DIR/mcp.json" ] && grep -q "superclaude-enterprise" "$MCP_DIR/mcp.json"; then
+if [ -f "$CLAUDE_CONFIG" ] && command -v jq &> /dev/null && jq -e '.mcpServers["superclaude-enterprise"]' "$CLAUDE_CONFIG" &> /dev/null; then
     echo -e "${GREEN}✅ MCP server is installed and configured${NC}"
+    echo ""
+    echo "Next steps:"
+    echo "1. Restart Claude Code to load the MCP server"
+    echo "2. In Claude Code, try: \"Use SuperClaude to analyze security\""
+elif [ -f "$PROJECT_CONFIG" ] && grep -q "superclaude-enterprise" "$PROJECT_CONFIG" 2>/dev/null; then
+    echo -e "${GREEN}✅ MCP server is configured locally for this project${NC}"
     echo ""
     echo "Next steps:"
     echo "1. Restart Claude Code to load the MCP server"
@@ -92,9 +103,9 @@ if [ -f "$MCP_DIR/mcp.json" ] && grep -q "superclaude-enterprise" "$MCP_DIR/mcp.
 else
     echo -e "${YELLOW}⚠️  MCP server needs to be configured${NC}"
     echo ""
-    echo "To complete setup, add to $MCP_DIR/mcp.json:"
+    echo "To complete setup, add to ~/.claude.json:"
     echo -e "${BLUE}{
-  \"servers\": {
+  \"mcpServers\": {
     \"superclaude-enterprise\": {
       \"command\": \"node\",
       \"args\": [\"$INSTALL_PATH/dist/mcp-server/index.js\"],

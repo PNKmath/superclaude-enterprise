@@ -158,20 +158,19 @@ cd superclaude-enterprise
 
 **1. MCP 서버 설정 확인**
 ```bash
-# MCP 설정 파일 위치
-# macOS/Linux: ~/.config/claude/mcp.json
-# Windows: %APPDATA%\Claude\mcp.json
+# Claude Code 설정 파일 위치
+# 전역 설정: ~/.claude.json
+# 프로젝트별 설정: .claude/settings.local.json
 
 # 설정 확인
-cat ~/.config/claude/mcp.json
+cat ~/.claude.json | jq '.mcpServers'
 ```
 
 **2. 수동 설정이 필요한 경우**
 ```bash
-# MCP 서버가 자동 등록되지 않은 경우, 수동으로 추가:
-# 1. mcp.json 파일을 직접 편집
+# ~/.claude.json 파일에 다음 내용 추가:
 {
-  "servers": {
+  "mcpServers": {
     "superclaude-enterprise": {
       "command": "node",
       "args": ["/절대/경로/superclaude-enterprise/dist/mcp-server/index.js"],
@@ -180,10 +179,15 @@ cat ~/.config/claude/mcp.json
   }
 }
 
-# 2. 또는 CLI 명령어 사용 (Claude CLI가 설치된 경우)
-# cd superclaude-enterprise
-# claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
+# 또는 프로젝트 디렉토리에서 로컬 설정:
+# .claude/settings.local.json 파일 생성
 ```
+
+**3. 설정 우선순위**
+1. `.claude/settings.local.json` (프로젝트별)
+2. `~/.claude/settings.local.json` (사용자 로컬)
+3. `~/.claude/settings.json` (사용자 전역)
+4. `~/.claude.json` (메인 설정)
 
 **Claude Code 재시작**
 ```bash
