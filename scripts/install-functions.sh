@@ -255,7 +255,7 @@ setup_mcp_config() {
   "servers": {
     "superclaude-enterprise": {
       "command": "node",
-      "args": ["INSTALL_PATH/dist/mcp-server.js"],
+      "args": ["INSTALL_PATH/dist/mcp-server/index.js"],
       "description": "SuperClaude Enterprise MCP Server - Advanced natural language command processing"
     }
   }

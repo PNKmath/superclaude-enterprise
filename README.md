@@ -17,8 +17,10 @@ git clone https://github.com/PNKmath/superclaude-enterprise.git
 cd superclaude-enterprise
 ./install-enterprise.sh
 
-# 2. Claude Code MCP 서버 등록
-claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
+# 2. Claude Code 재시작 (MCP 서버가 자동으로 등록됨)
+# 설치 스크립트가 ~/.config/claude/mcp.json에 자동으로 설정을 추가합니다.
+# 수동 등록이 필요한 경우:
+# claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
 
 # 3. Claude Code에서 자연어로 사용!
 # Claude Code에 자연어로 요청:
@@ -149,31 +151,37 @@ cd superclaude-enterprise
 ./bin/superclaude-enterprise --help
 ```
 
-### Claude Code MCP Server 설정 (권장) 🆕
+### MCP Server 설치 확인 및 설정 🆕
 
-SuperClaude Enterprise를 MCP 서버로 등록하면 자연어 명령어를 처리할 수 있습니다:
+설치 스크립트는 자동으로 MCP 서버를 설정합니다. 설치 후 확인 방법:
 
-**방법 1: mcp.json 파일 직접 수정 (권장)**
+**1. MCP 서버 설정 확인**
 ```bash
-# 1. Claude Code 설정 디렉토리로 이동
-# macOS: ~/Library/Application Support/Claude/
-# Windows: %APPDATA%\Claude\
-# Linux: ~/.config/claude/
+# MCP 설정 파일 위치
+# macOS/Linux: ~/.config/claude/mcp.json
+# Windows: %APPDATA%\Claude\mcp.json
 
-# 2. mcp.json 파일에 다음 내용 추가:
-{
-  "superclaude-enterprise": {
-    "command": "node",
-    "args": ["/absolute/path/to/SuperClaude-Enterprise/dist/mcp-server/index.js"],
-    "env": {}
-  }
-}
+# 설정 확인
+cat ~/.config/claude/mcp.json
 ```
 
-**방법 2: claude CLI 사용**
+**2. 수동 설정이 필요한 경우**
 ```bash
-# MCP 서버로 등록
-claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
+# MCP 서버가 자동 등록되지 않은 경우, 수동으로 추가:
+# 1. mcp.json 파일을 직접 편집
+{
+  "servers": {
+    "superclaude-enterprise": {
+      "command": "node",
+      "args": ["/절대/경로/superclaude-enterprise/dist/mcp-server/index.js"],
+      "description": "SuperClaude Enterprise MCP Server"
+    }
+  }
+}
+
+# 2. 또는 CLI 명령어 사용 (Claude CLI가 설치된 경우)
+# cd superclaude-enterprise
+# claude mcp add -s user superclaude-enterprise "node $PWD/dist/mcp-server/index.js"
 ```
 
 **Claude Code 재시작**
