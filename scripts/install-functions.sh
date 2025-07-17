@@ -79,6 +79,65 @@ check_git() {
     return 0
 }
 
+# Check jq installation
+check_jq() {
+    if ! command -v jq &> /dev/null; then
+        echo -e "${YELLOW}⚠️  jq is not installed${NC}"
+        return 1
+    fi
+    echo -e "${GREEN}✓ jq $(jq --version)${NC}"
+    return 0
+}
+
+# Install jq
+install_jq() {
+    echo -e "\n${YELLOW}Installing jq (JSON processor)...${NC}"
+    
+    # Detect OS and install accordingly
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # Linux
+        if command -v apt-get &> /dev/null; then
+            # Debian/Ubuntu
+            echo -e "${YELLOW}Installing jq using apt...${NC}"
+            if sudo apt-get update && sudo apt-get install -y jq; then
+                echo -e "${GREEN}✓ jq installed successfully${NC}"
+                return 0
+            fi
+        elif command -v yum &> /dev/null; then
+            # RHEL/CentOS
+            echo -e "${YELLOW}Installing jq using yum...${NC}"
+            if sudo yum install -y jq; then
+                echo -e "${GREEN}✓ jq installed successfully${NC}"
+                return 0
+            fi
+        elif command -v pacman &> /dev/null; then
+            # Arch Linux
+            echo -e "${YELLOW}Installing jq using pacman...${NC}"
+            if sudo pacman -S --noconfirm jq; then
+                echo -e "${GREEN}✓ jq installed successfully${NC}"
+                return 0
+            fi
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        if command -v brew &> /dev/null; then
+            echo -e "${YELLOW}Installing jq using Homebrew...${NC}"
+            if brew install jq; then
+                echo -e "${GREEN}✓ jq installed successfully${NC}"
+                return 0
+            fi
+        fi
+    fi
+    
+    # If we couldn't install automatically, provide manual instructions
+    echo -e "${RED}❌ Could not install jq automatically${NC}"
+    echo -e "${YELLOW}Please install jq manually:${NC}"
+    echo "  - Linux: sudo apt-get install jq (or yum/pacman)"
+    echo "  - macOS: brew install jq"
+    echo "  - Or download from: https://stedolan.github.io/jq/download/"
+    return 1
+}
+
 # Check all prerequisites
 check_prerequisites() {
     echo -e "\n${YELLOW}Checking prerequisites...${NC}"
@@ -89,6 +148,28 @@ check_prerequisites() {
     check_npm || all_ok=false
     check_python || all_ok=false
     check_git || all_ok=false
+    
+    # Check for uv (optional but recommended)
+    if ! check_uv; then
+        echo -n "Would you like to install uv package manager? (recommended) (y/n): "
+        read -r uv_response
+        if [[ "$uv_response" =~ ^[Yy]$ ]]; then
+            install_uv
+        else
+            echo -e "${YELLOW}Proceeding without uv (will use pip instead)${NC}"
+        fi
+    fi
+    
+    # Check for jq (needed for JSON processing)
+    if ! check_jq; then
+        echo -n "Would you like to install jq? (needed for automatic MCP configuration) (y/n): "
+        read -r jq_response
+        if [[ "$jq_response" =~ ^[Yy]$ ]]; then
+            install_jq
+        else
+            echo -e "${YELLOW}Proceeding without jq (will use Python for JSON processing)${NC}"
+        fi
+    fi
     
     if [ "$all_ok" = false ]; then
         return 1
@@ -123,27 +204,42 @@ build_project() {
     fi
 }
 
-# Create virtual environment
-create_virtual_environment() {
-    echo -e "\n${YELLOW}Creating Python virtual environment...${NC}"
-    
-    if python3 -m venv venv; then
-        echo -e "${GREEN}✓ Virtual environment created${NC}"
-        return 0
-    else
-        echo -e "${RED}❌ Failed to create virtual environment${NC}"
+# Note: Virtual environment functions removed - SuperClaude uses system Python
+
+# Check uv package manager installation
+check_uv() {
+    if ! command -v uv &> /dev/null; then
+        echo -e "${YELLOW}⚠️  uv package manager not found${NC}"
         return 1
     fi
+    echo -e "${GREEN}✓ uv $(uv --version 2>/dev/null | cut -d' ' -f2)${NC}"
+    return 0
 }
 
-# Activate virtual environment
-activate_virtual_environment() {
-    if [ -f "venv/bin/activate" ]; then
-        source venv/bin/activate
-        echo -e "${GREEN}✓ Virtual environment activated${NC}"
-        return 0
+# Install uv package manager
+install_uv() {
+    echo -e "\n${YELLOW}Installing uv package manager...${NC}"
+    echo -e "${BLUE}uv is a fast Python package manager recommended for SuperClaude${NC}"
+    
+    # Install uv using the official installer
+    if curl -LsSf https://astral.sh/uv/install.sh | sh; then
+        echo -e "${GREEN}✓ uv installed successfully${NC}"
+        
+        # Add uv to PATH for current session
+        export PATH="$HOME/.cargo/bin:$PATH"
+        
+        # Verify installation
+        if command -v uv &> /dev/null; then
+            echo -e "${GREEN}✓ uv is now available in PATH${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}⚠️  uv installed but not in PATH. Please restart your terminal or run:${NC}"
+            echo -e "${BLUE}export PATH=\"\$HOME/.cargo/bin:\$PATH\"${NC}"
+            return 1
+        fi
     else
-        echo -e "${RED}❌ Virtual environment not found${NC}"
+        echo -e "${RED}❌ Failed to install uv${NC}"
+        echo -e "${YELLOW}You can install it manually from: https://github.com/astral-sh/uv${NC}"
         return 1
     fi
 }
@@ -152,18 +248,9 @@ activate_virtual_environment() {
 check_superclaude_installation() {
     echo -e "\n${YELLOW}Checking for SuperClaude installation...${NC}"
     
-    # Use the check-paths.js helper
-    if [ -f "scripts/check-paths.js" ] && [ -f "dist/utils/path-resolver.js" ]; then
-        SUPERCLAUDE_PATH=$(node scripts/check-paths.js superclaude 2>/dev/null)
-        if [ $? -eq 0 ] && [ -n "$SUPERCLAUDE_PATH" ]; then
-            echo -e "${GREEN}✓ SuperClaude found at: $SUPERCLAUDE_PATH${NC}"
-            return 0
-        fi
-    fi
-    
-    # Check in current directory
-    if [ -d "SuperClaude" ]; then
-        echo -e "${GREEN}✓ SuperClaude found in current directory${NC}"
+    # Check if SuperClaude is installed as a Python package
+    if python3 -c "import SuperClaude" 2>/dev/null; then
+        echo -e "${GREEN}✓ SuperClaude is already installed${NC}"
         return 0
     fi
     
@@ -174,57 +261,105 @@ check_superclaude_installation() {
 # Install SuperClaude
 install_superclaude() {
     echo -e "\n${YELLOW}Installing SuperClaude...${NC}"
-    echo -e "${BLUE}This will clone SuperClaude from GitHub and install it${NC}"
+    echo -e "${BLUE}This will install SuperClaude from PyPI${NC}"
     echo -n "Do you want to proceed? (y/n): "
     read -r response
     
     if [[ ! "$response" =~ ^[Yy]$ ]]; then
-        echo -e "${YELLOW}Skipping SuperClaude installation${NC}"
+        echo -e "${RED}❌ CRITICAL: SuperClaude installation skipped!${NC}"
+        echo -e "${RED}   The MCP server cannot function without SuperClaude.${NC}"
+        echo -e "${RED}   Please run the installer again and install SuperClaude.${NC}"
         return 1
     fi
     
-    # Clone SuperClaude
-    if [ -d "SuperClaude" ]; then
-        echo -e "${YELLOW}SuperClaude directory already exists${NC}"
-        echo -n "Remove and reinstall? (y/n): "
-        read -r remove_response
-        
-        if [[ "$remove_response" =~ ^[Yy]$ ]]; then
-            rm -rf SuperClaude
+    # Check if uv is available
+    if command -v uv &> /dev/null; then
+        echo -e "${YELLOW}Installing SuperClaude using uv...${NC}"
+        if uv pip install SuperClaude; then
+            echo -e "${GREEN}✓ SuperClaude package installed successfully${NC}"
         else
-            return 0
+            echo -e "${RED}❌ Failed to install SuperClaude with uv${NC}"
+            echo -e "${YELLOW}Trying with pip...${NC}"
+            if pip install SuperClaude; then
+                echo -e "${GREEN}✓ SuperClaude package installed successfully with pip${NC}"
+            else
+                echo -e "${RED}❌ Failed to install SuperClaude${NC}"
+                return 1
+            fi
+        fi
+    else
+        echo -e "${YELLOW}Installing SuperClaude using pip...${NC}"
+        if pip install SuperClaude; then
+            echo -e "${GREEN}✓ SuperClaude package installed successfully${NC}"
+        else
+            echo -e "${RED}❌ Failed to install SuperClaude${NC}"
+            return 1
         fi
     fi
     
-    echo -e "${YELLOW}Cloning SuperClaude from GitHub...${NC}"
-    if git clone https://github.com/NomenAK/SuperClaude.git; then
-        echo -e "${GREEN}✓ SuperClaude cloned successfully${NC}"
-    else
-        echo -e "${RED}❌ Failed to clone SuperClaude${NC}"
+    # Run SuperClaude installer
+    echo -e "\n${YELLOW}Running SuperClaude configuration...${NC}"
+    echo -e "${BLUE}Choose your installation profile:${NC}"
+    echo "1. Quick setup (recommended)"
+    echo "2. Interactive selection"
+    echo "3. Minimal install"
+    echo "4. Developer setup"
+    echo -n "Enter your choice (1-4) [1]: "
+    read -r install_choice
+    
+    # Default to quick setup if no choice or invalid choice
+    case "$install_choice" in
+        2)
+            echo -e "${YELLOW}Running interactive installation...${NC}"
+            if python3 -m SuperClaude install --interactive; then
+                echo -e "${GREEN}✓ SuperClaude configuration completed${NC}"
+            else
+                echo -e "${RED}❌ SuperClaude configuration failed${NC}"
+                return 1
+            fi
+            ;;
+        3)
+            echo -e "${YELLOW}Running minimal installation...${NC}"
+            if python3 -m SuperClaude install --minimal; then
+                echo -e "${GREEN}✓ SuperClaude configuration completed${NC}"
+            else
+                echo -e "${RED}❌ SuperClaude configuration failed${NC}"
+                return 1
+            fi
+            ;;
+        4)
+            echo -e "${YELLOW}Running developer installation...${NC}"
+            if python3 -m SuperClaude install --profile developer; then
+                echo -e "${GREEN}✓ SuperClaude configuration completed${NC}"
+            else
+                echo -e "${RED}❌ SuperClaude configuration failed${NC}"
+                return 1
+            fi
+            ;;
+        *)
+            echo -e "${YELLOW}Running quick setup...${NC}"
+            if python3 -m SuperClaude install; then
+                echo -e "${GREEN}✓ SuperClaude configuration completed${NC}"
+            else
+                echo -e "${RED}❌ SuperClaude configuration failed${NC}"
+                return 1
+            fi
+            ;;
+    esac
+    
+    # Verify SuperClaude installation
+    if ! python3 -c "import SuperClaude" 2>/dev/null; then
+        echo -e "\n${RED}❌ CRITICAL ERROR: SuperClaude installation verification failed!${NC}"
+        echo -e "${RED}   SuperClaude module is not accessible.${NC}"
+        echo -e "${RED}   This is a fatal error that will prevent the MCP server from working.${NC}"
+        echo -e "${YELLOW}   Troubleshooting steps:${NC}"
+        echo -e "   1. Check Python installation: python3 --version"
+        echo -e "   2. Check pip installation: pip --version"
+        echo -e "   3. Try manual installation: pip install SuperClaude"
+        echo -e "   4. Check for error messages above"
         return 1
     fi
     
-    # Install SuperClaude in development mode
-    cd SuperClaude
-    echo -e "${YELLOW}Installing SuperClaude in development mode...${NC}"
-    
-    if pip install -e .; then
-        echo -e "${GREEN}✓ SuperClaude installed successfully${NC}"
-    else
-        echo -e "${YELLOW}⚠️  SuperClaude package installation failed${NC}"
-    fi
-    
-    # Run SuperClaude installer
-    echo -e "\n${YELLOW}Running SuperClaude installer...${NC}"
-    echo -e "${BLUE}Please follow the prompts to complete SuperClaude installation${NC}"
-    
-    if python3 installer.py --force; then
-        echo -e "${GREEN}✓ SuperClaude installer completed${NC}"
-    else
-        echo -e "${YELLOW}⚠️  SuperClaude installer failed or was skipped${NC}"
-    fi
-    
-    cd ..
     return 0
 }
 
@@ -254,9 +389,50 @@ setup_mcp_config() {
             }' "$CLAUDE_CONFIG" > "$CLAUDE_CONFIG.tmp" && mv "$CLAUDE_CONFIG.tmp" "$CLAUDE_CONFIG"
             echo -e "${GREEN}✓ Updated Claude configuration with MCP server${NC}"
         else
-            echo -e "${YELLOW}⚠️  jq not found. Please manually add MCP server to $CLAUDE_CONFIG${NC}"
-            echo -e "${BLUE}Add this to your ~/.claude.json:${NC}"
-            cat << EOF
+            # Use Python as fallback for JSON processing
+            echo -e "${YELLOW}Using Python for JSON processing...${NC}"
+            
+            # Create Python script to update JSON
+            python3 << PYTHON_SCRIPT
+import json
+import sys
+
+config_path = "$CLAUDE_CONFIG"
+install_path = "$INSTALL_PATH"
+
+try:
+    # Read existing config
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+except:
+    config = {}
+
+# Ensure mcpServers exists
+if 'mcpServers' not in config:
+    config['mcpServers'] = {}
+
+# Add or update superclaude-enterprise
+config['mcpServers']['superclaude-enterprise'] = {
+    'command': 'node',
+    'args': [install_path + '/dist/mcp-server/index.js'],
+    'description': 'SuperClaude Enterprise MCP Server'
+}
+
+# Write updated config
+with open(config_path, 'w') as f:
+    json.dump(config, f, indent=2)
+
+print("✓ Updated Claude configuration with MCP server")
+PYTHON_SCRIPT
+            
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}✓ Successfully updated configuration using Python${NC}"
+            else
+                echo -e "${RED}❌ CRITICAL ERROR: Failed to update MCP configuration!${NC}"
+                echo -e "${RED}   The MCP server will not be available in Claude Code.${NC}"
+                echo -e "${YELLOW}   Manual configuration required:${NC}"
+                echo -e "${BLUE}   Add this to your ~/.claude.json:${NC}"
+                cat << EOF
 {
   "mcpServers": {
     "superclaude-enterprise": {
@@ -271,7 +447,36 @@ EOF
     else
         # Create new configuration
         echo -e "${BLUE}Creating new Claude configuration${NC}"
-        cat > "$CLAUDE_CONFIG" << EOF
+        
+        # Try to use Python to create properly formatted JSON
+        if command -v python3 &> /dev/null; then
+            python3 << PYTHON_SCRIPT
+import json
+
+config_path = "$CLAUDE_CONFIG"
+install_path = "$INSTALL_PATH"
+
+config = {
+    'mcpServers': {
+        'superclaude-enterprise': {
+            'command': 'node',
+            'args': [install_path + '/dist/mcp-server/index.js'],
+            'description': 'SuperClaude Enterprise MCP Server'
+        }
+    }
+}
+
+with open(config_path, 'w') as f:
+    json.dump(config, f, indent=2)
+
+print("✓ Created Claude configuration with MCP server")
+PYTHON_SCRIPT
+            
+            if [ $? -eq 0 ]; then
+                echo -e "${GREEN}✓ Successfully created configuration${NC}"
+            else
+                # Fallback to cat if Python fails
+                cat > "$CLAUDE_CONFIG" << EOF
 {
   "mcpServers": {
     "superclaude-enterprise": {
@@ -301,8 +506,22 @@ EOF
         echo -e "${GREEN}✓ Created project-specific MCP configuration${NC}"
     fi
     
-    echo -e "${GREEN}✓ MCP configuration completed${NC}"
-    return 0
+    # Verify MCP configuration
+    if [ -f "$CLAUDE_CONFIG" ]; then
+        if grep -q "superclaude-enterprise" "$CLAUDE_CONFIG" 2>/dev/null; then
+            echo -e "${GREEN}✓ MCP configuration completed and verified${NC}"
+            return 0
+        else
+            echo -e "${RED}❌ WARNING: MCP configuration may have failed!${NC}"
+            echo -e "${RED}   Could not find 'superclaude-enterprise' in configuration.${NC}"
+            echo -e "${YELLOW}   Please verify your ~/.claude.json file contains the MCP server.${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}❌ ERROR: Configuration file not created!${NC}"
+        echo -e "${RED}   Expected file: $CLAUDE_CONFIG${NC}"
+        return 1
+    fi
 }
 
 # Run tests
@@ -324,12 +543,29 @@ print_completion() {
     echo -e "\n${BLUE}Next steps:${NC}"
     echo "1. Restart Claude Desktop to load the MCP server"
     echo "2. You should see 'superclaude-enterprise' in your MCP servers list"
-    echo "3. Try natural language commands like:"
+    echo "3. SuperClaude is now available! You can use commands like:"
     echo "   - '프로젝트의 보안 취약점을 분석해줘'"
     echo "   - 'analyze the performance of this codebase'"
     echo "   - 'implement a new authentication system'"
     echo ""
+    echo "4. The MCP server integration allows natural language commands"
+    echo ""
     echo -e "${YELLOW}For more information, see README.md${NC}"
+}
+
+# Print failure message
+print_failure() {
+    echo -e "\n${RED}❌ ❌ ❌ INSTALLATION FAILED! ❌ ❌ ❌${NC}"
+    echo -e "${RED}Critical components were not installed properly.${NC}"
+    echo -e "\n${YELLOW}Common issues and solutions:${NC}"
+    echo "1. Python version: Ensure Python 3.8+ is installed"
+    echo "2. Permissions: You may need sudo for some operations"
+    echo "3. Network: Check internet connection for package downloads"
+    echo "4. Dependencies: Install missing dependencies manually"
+    echo -e "\n${YELLOW}For help, please check:${NC}"
+    echo "- Installation logs above for specific errors"
+    echo "- README.md for detailed instructions"
+    echo "- GitHub issues for known problems"
 }
 
 # Main installation function
@@ -351,22 +587,37 @@ run_installation() {
         return 1
     fi
     
-    if ! create_virtual_environment; then
-        echo -e "\n${RED}Installation failed: Virtual environment${NC}"
-        return 1
-    fi
+    # Skip virtual environment creation - use system Python for SuperClaude
+    echo -e "\n${BLUE}Note: SuperClaude will be installed in your system Python environment${NC}"
     
-    if ! activate_virtual_environment; then
-        echo -e "\n${RED}Installation failed: Virtual environment activation${NC}"
-        return 1
-    fi
-    
+    # SuperClaude installation is CRITICAL
+    local superclaude_installed=false
     if ! check_superclaude_installation; then
-        install_superclaude
+        if install_superclaude; then
+            superclaude_installed=true
+        else
+            echo -e "\n${RED}❌ CRITICAL FAILURE: SuperClaude installation failed!${NC}"
+            echo -e "${RED}   The installation cannot continue without SuperClaude.${NC}"
+            echo -e "${RED}   The MCP server will not function.${NC}"
+            echo -e "\n${YELLOW}Please try the following:${NC}"
+            echo -e "   1. Run: pip install SuperClaude"
+            echo -e "   2. Or with uv: uv pip install SuperClaude"
+            echo -e "   3. Then run this installer again"
+            return 1
+        fi
+    else
+        superclaude_installed=true
     fi
     
-    if ! setup_mcp_config; then
-        echo -e "\n${YELLOW}⚠️  MCP configuration failed${NC}"
+    # MCP configuration is also CRITICAL
+    if [ "$superclaude_installed" = true ]; then
+        if ! setup_mcp_config; then
+            echo -e "\n${RED}❌ CRITICAL FAILURE: MCP configuration failed!${NC}"
+            echo -e "${RED}   Claude Code will not be able to use the SuperClaude MCP server.${NC}"
+            echo -e "${RED}   Natural language commands will not work.${NC}"
+            echo -e "\n${YELLOW}Manual configuration required - see instructions above.${NC}"
+            return 1
+        fi
     fi
     
     # Run tests (optional)
@@ -379,3 +630,6 @@ run_installation() {
     print_completion
     return 0
 }
+
+# Exit handler for critical failures
+trap 'if [ $? -ne 0 ]; then print_failure; fi' EXIT
