@@ -272,30 +272,114 @@ install_superclaude() {
         return 1
     fi
     
-    # Check if uv is available
+    # Check if uv is available, install if not
+    if ! command -v uv &> /dev/null; then
+        echo -e "${YELLOW}uv not found. Installing uv first...${NC}"
+        if ! install_uv; then
+            echo -e "${RED}❌ Failed to install uv. Falling back to pip...${NC}"
+        else
+            # Update PATH for current session
+            export PATH="$HOME/.cargo/bin:$PATH"
+        fi
+    fi
+    
+    # Try uv first (handles externally-managed-environment)
     if command -v uv &> /dev/null; then
         echo -e "${YELLOW}Installing SuperClaude using uv...${NC}"
-        if uv pip install SuperClaude; then
+        # Check if we're in a virtual environment
+        if [ -n "$VIRTUAL_ENV" ]; then
+            # In venv, install normally
+            UV_INSTALL_CMD="uv pip install SuperClaude"
+        else
+            # Not in venv, use --system flag
+            UV_INSTALL_CMD="uv pip install --system SuperClaude"
+        fi
+        
+        echo -e "${BLUE}Running: $UV_INSTALL_CMD${NC}"
+        if $UV_INSTALL_CMD; then
             echo -e "${GREEN}✓ SuperClaude package installed successfully${NC}"
+            
+            # Get the installation path
+            SUPERCLAUDE_LOCATION=$(uv pip show SuperClaude 2>/dev/null | grep Location | cut -d' ' -f2)
+            if [ -n "$SUPERCLAUDE_LOCATION" ]; then
+                echo -e "${BLUE}SuperClaude installed at: $SUPERCLAUDE_LOCATION${NC}"
+                
+                # Find the actual superclaude executable
+                SUPERCLAUDE_BIN=""
+                for dir in "$SUPERCLAUDE_LOCATION/../Scripts" "$SUPERCLAUDE_LOCATION/../bin" "$HOME/.local/bin"; do
+                    if [ -f "$dir/superclaude" ]; then
+                        SUPERCLAUDE_BIN="$dir/superclaude"
+                        break
+                    fi
+                done
+                
+                if [ -n "$SUPERCLAUDE_BIN" ]; then
+                    echo -e "${GREEN}✓ SuperClaude executable found at: $SUPERCLAUDE_BIN${NC}"
+                    export SUPERCLAUDE_COMMAND="$SUPERCLAUDE_BIN"
+                else
+                    echo -e "${YELLOW}⚠ SuperClaude executable not found in standard locations${NC}"
+                fi
+            fi
         else
             echo -e "${RED}❌ Failed to install SuperClaude with uv${NC}"
-            echo -e "${YELLOW}Trying with pip...${NC}"
-            if pip install SuperClaude; then
-                echo -e "${GREEN}✓ SuperClaude package installed successfully with pip${NC}"
+            echo -e "${YELLOW}Trying alternative methods...${NC}"
+            
+            # Try with --break-system-packages as last resort
+            if pip install SuperClaude --break-system-packages 2>/dev/null; then
+                echo -e "${GREEN}✓ SuperClaude installed with pip (break-system-packages)${NC}"
             else
                 echo -e "${RED}❌ Failed to install SuperClaude${NC}"
                 return 1
             fi
         fi
     else
+        # Fallback to pip with appropriate flags
         echo -e "${YELLOW}Installing SuperClaude using pip...${NC}"
-        if pip install SuperClaude; then
-            echo -e "${GREEN}✓ SuperClaude package installed successfully${NC}"
+        
+        # Check if environment is externally managed
+        if pip install --dry-run SuperClaude 2>&1 | grep -q "externally-managed-environment"; then
+            echo -e "${YELLOW}Detected externally-managed Python environment${NC}"
+            echo -e "${YELLOW}Using --break-system-packages flag...${NC}"
+            
+            if pip install SuperClaude --break-system-packages; then
+                echo -e "${GREEN}✓ SuperClaude package installed successfully${NC}"
+            else
+                echo -e "${RED}❌ Failed to install SuperClaude${NC}"
+                echo -e "${YELLOW}Please consider using a virtual environment or pipx${NC}"
+                return 1
+            fi
         else
-            echo -e "${RED}❌ Failed to install SuperClaude${NC}"
-            return 1
+            if pip install SuperClaude; then
+                echo -e "${GREEN}✓ SuperClaude package installed successfully${NC}"
+            else
+                echo -e "${RED}❌ Failed to install SuperClaude${NC}"
+                return 1
+            fi
         fi
     fi
+    
+    # Find the correct way to run SuperClaude
+    SUPERCLAUDE_CMD=""
+    
+    # First, check if we have the executable path from uv installation
+    if [ -n "$SUPERCLAUDE_COMMAND" ] && [ -x "$SUPERCLAUDE_COMMAND" ]; then
+        SUPERCLAUDE_CMD="$SUPERCLAUDE_COMMAND"
+    # Check if superclaude is in PATH
+    elif command -v superclaude &> /dev/null; then
+        SUPERCLAUDE_CMD="superclaude"
+    # Try common installation locations
+    elif [ -x "$HOME/.local/bin/superclaude" ]; then
+        SUPERCLAUDE_CMD="$HOME/.local/bin/superclaude"
+    # Try Python module execution
+    elif python3 -c "import SuperClaude" 2>/dev/null; then
+        SUPERCLAUDE_CMD="python3 -m SuperClaude"
+    else
+        echo -e "${RED}❌ Cannot find SuperClaude executable${NC}"
+        echo -e "${YELLOW}Please ensure SuperClaude is properly installed${NC}"
+        return 1
+    fi
+    
+    echo -e "${GREEN}✓ Using SuperClaude command: $SUPERCLAUDE_CMD${NC}"
     
     # Run SuperClaude installer
     echo -e "\n${YELLOW}Running SuperClaude configuration...${NC}"
@@ -311,7 +395,7 @@ install_superclaude() {
     case "$install_choice" in
         2)
             echo -e "${YELLOW}Running interactive installation...${NC}"
-            if python3 -m SuperClaude install --interactive; then
+            if $SUPERCLAUDE_CMD install --interactive; then
                 echo -e "${GREEN}✓ SuperClaude configuration completed${NC}"
             else
                 echo -e "${RED}❌ SuperClaude configuration failed${NC}"
@@ -320,7 +404,7 @@ install_superclaude() {
             ;;
         3)
             echo -e "${YELLOW}Running minimal installation...${NC}"
-            if python3 -m SuperClaude install --minimal; then
+            if $SUPERCLAUDE_CMD install --minimal; then
                 echo -e "${GREEN}✓ SuperClaude configuration completed${NC}"
             else
                 echo -e "${RED}❌ SuperClaude configuration failed${NC}"
@@ -329,7 +413,7 @@ install_superclaude() {
             ;;
         4)
             echo -e "${YELLOW}Running developer installation...${NC}"
-            if python3 -m SuperClaude install --profile developer; then
+            if $SUPERCLAUDE_CMD install --profile developer; then
                 echo -e "${GREEN}✓ SuperClaude configuration completed${NC}"
             else
                 echo -e "${RED}❌ SuperClaude configuration failed${NC}"
@@ -338,7 +422,7 @@ install_superclaude() {
             ;;
         *)
             echo -e "${YELLOW}Running quick setup...${NC}"
-            if python3 -m SuperClaude install; then
+            if $SUPERCLAUDE_CMD install; then
                 echo -e "${GREEN}✓ SuperClaude configuration completed${NC}"
             else
                 echo -e "${RED}❌ SuperClaude configuration failed${NC}"
@@ -346,6 +430,9 @@ install_superclaude() {
             fi
             ;;
     esac
+    
+    # Store the command for MCP configuration
+    export SUPERCLAUDE_COMMAND="$SUPERCLAUDE_CMD"
     
     # Verify SuperClaude installation
     if ! python3 -c "import SuperClaude" 2>/dev/null; then
