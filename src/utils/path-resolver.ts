@@ -71,18 +71,26 @@ export class PathResolver {
       return this.cachedPaths.get(cacheKey)!;
     }
 
+    // Check environment variable first (highest priority)
+    if (process.env.SUPERCLAUDE_PYTHON) {
+      if (this.isPythonWithSuperClaude(process.env.SUPERCLAUDE_PYTHON)) {
+        this.cachedPaths.set(cacheKey, process.env.SUPERCLAUDE_PYTHON);
+        return process.env.SUPERCLAUDE_PYTHON;
+      }
+    }
+
     const superclaudePath = this.findSuperClaude();
     const baseDir = superclaudePath ? path.dirname(superclaudePath) : process.cwd();
 
     // Check for virtual environment first
     const venvPython = this.findVirtualEnvPython(baseDir);
-    if (venvPython) {
+    if (venvPython && this.isPythonWithSuperClaude(venvPython)) {
       this.cachedPaths.set(cacheKey, venvPython);
       return venvPython;
     }
 
-    // Fall back to system Python
-    const systemPython = this.findSystemPython();
+    // Fall back to system Python with SuperClaude
+    const systemPython = this.findSystemPythonWithSuperClaude();
     this.cachedPaths.set(cacheKey, systemPython);
     return systemPython;
   }
@@ -136,6 +144,34 @@ export class PathResolver {
 
     // Default fallback
     return 'python3';
+  }
+
+  /**
+   * Find system Python with SuperClaude installed
+   */
+  private findSystemPythonWithSuperClaude(): string {
+    const pythonCommands = ['python3', 'python', 'python3.9', 'python3.10', 'python3.11', 'python3.12'];
+    
+    for (const cmd of pythonCommands) {
+      if (this.isPythonWithSuperClaude(cmd)) {
+        return cmd;
+      }
+    }
+
+    // If no Python has SuperClaude, return the first working Python
+    return this.findSystemPython();
+  }
+
+  /**
+   * Check if a Python executable has SuperClaude installed
+   */
+  private isPythonWithSuperClaude(pythonPath: string): boolean {
+    try {
+      execSync(`"${pythonPath}" -c "import SuperClaude"`, { stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

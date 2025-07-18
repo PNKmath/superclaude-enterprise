@@ -101,15 +101,15 @@ export class ExtensionManager {
     this.logger.info('Initializing SuperClaude Enterprise Extension...');
     
     try {
-      // Verify SuperClaude installation
-      await this.verifySuperClaude();
-      
-      // Validate SuperClaude bridge
+      // Validate SuperClaude bridge first (this sets up the correct Python path)
       const bridgeValid = await this.superClaudeBridge.validate();
       if (!bridgeValid) {
         this.logger.warn('SuperClaude bridge validation failed - running in standalone mode');
         // Continue initialization in standalone mode instead of throwing
       }
+      
+      // Then verify SuperClaude installation with the correct Python
+      await this.verifySuperClaude();
       
       // Initialize all components
       await Promise.all([
@@ -334,15 +334,8 @@ export class ExtensionManager {
       const { promisify } = require('util');
       const execAsync = promisify(exec);
       
-      // Check if we're in a virtual environment
-      const venvPath = process.env.VIRTUAL_ENV;
-      let pythonCmd = 'python3';
-      
-      if (venvPath) {
-        // Use the virtual environment's Python
-        pythonCmd = path.join(venvPath, 'bin', 'python');
-        this.logger.info(`Using virtual environment Python: ${pythonCmd}`);
-      }
+      // Get Python command from various sources
+      const pythonCmd = await this.detectPythonCommand();
       
       // Try to import SuperClaude
       const checkCmd = `${pythonCmd} -c "import SuperClaude; print('SuperClaude found')"`;
@@ -390,6 +383,97 @@ export class ExtensionManager {
     }
     
     return flags;
+  }
+  
+  /**
+   * Detect the appropriate Python command for running SuperClaude
+   * This method checks multiple sources in priority order:
+   * 1. Environment variable SUPERCLAUDE_PYTHON
+   * 2. Configuration file setting
+   * 3. Active virtual environment (VIRTUAL_ENV)
+   * 4. Common virtual environment directories
+   * 5. System Python with SuperClaude installed
+   */
+  private async detectPythonCommand(): Promise<string> {
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    const candidates: Array<{name: string, path: string}> = [];
+    
+    // 1. Check environment variable (highest priority)
+    if (process.env.SUPERCLAUDE_PYTHON) {
+      candidates.push({
+        name: 'Environment variable',
+        path: process.env.SUPERCLAUDE_PYTHON
+      });
+    }
+    
+    // 2. Check configuration file
+    const configPython = (this.geminiAdapter as any)?.config?.superclaude?.pythonPath;
+    if (configPython && configPython !== 'python3') {
+      candidates.push({
+        name: 'Configuration file',
+        path: configPython
+      });
+    }
+    
+    // 3. Check active virtual environment
+    if (process.env.VIRTUAL_ENV) {
+      candidates.push({
+        name: 'Active virtual environment',
+        path: path.join(process.env.VIRTUAL_ENV, 'bin', 'python')
+      });
+    }
+    
+    // 4. Check common virtual environment locations
+    const projectRoot = path.join(__dirname, '../../..');
+    const venvLocations = [
+      { name: 'Project venv', path: path.join(projectRoot, 'venv', 'bin', 'python') },
+      { name: 'Project .venv', path: path.join(projectRoot, '.venv', 'bin', 'python') },
+      { name: 'CWD venv', path: path.join(process.cwd(), 'venv', 'bin', 'python') },
+      { name: 'CWD .venv', path: path.join(process.cwd(), '.venv', 'bin', 'python') },
+      { name: 'Parent venv', path: path.join(process.cwd(), '..', 'venv', 'bin', 'python') },
+      { name: 'Parent .venv', path: path.join(process.cwd(), '..', '.venv', 'bin', 'python') }
+    ];
+    
+    for (const location of venvLocations) {
+      try {
+        await fs.access(location.path);
+        candidates.push(location);
+      } catch {
+        // Path doesn't exist, skip
+      }
+    }
+    
+    // 5. Common system Python paths
+    const systemPythons = [
+      { name: 'python3', path: 'python3' },
+      { name: 'python', path: 'python' },
+      { name: '/usr/bin/python3', path: '/usr/bin/python3' },
+      { name: '/usr/local/bin/python3', path: '/usr/local/bin/python3' }
+    ];
+    
+    candidates.push(...systemPythons);
+    
+    // Test each candidate to find one with SuperClaude installed
+    for (const candidate of candidates) {
+      try {
+        const testCmd = `${candidate.path} -c "import SuperClaude; print('found')"`;
+        const { stdout } = await execAsync(testCmd);
+        
+        if (stdout.includes('found')) {
+          this.logger.info(`Using Python from ${candidate.name}: ${candidate.path}`);
+          return candidate.path;
+        }
+      } catch {
+        // This Python doesn't have SuperClaude, try next
+      }
+    }
+    
+    // If no Python with SuperClaude found, return the first available Python
+    this.logger.warn('No Python with SuperClaude found, using default python3');
+    return 'python3';
   }
 
   private async executeWithBackend(

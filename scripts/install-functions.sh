@@ -815,6 +815,51 @@ install_superclaude() {
     return 0
 }
 
+# Detect Python with SuperClaude installed
+detect_superclaude_python() {
+    local python_cmd=""
+    
+    # Check environment variable first
+    if [ -n "$SUPERCLAUDE_PYTHON" ]; then
+        if $SUPERCLAUDE_PYTHON -c "import SuperClaude" 2>/dev/null; then
+            echo "$SUPERCLAUDE_PYTHON"
+            return 0
+        fi
+    fi
+    
+    # Check active virtual environment
+    if [ -n "$VIRTUAL_ENV" ]; then
+        local venv_python="$VIRTUAL_ENV/bin/python"
+        if $venv_python -c "import SuperClaude" 2>/dev/null; then
+            echo "$venv_python"
+            return 0
+        fi
+    fi
+    
+    # Check common virtual environment locations
+    for venv_dir in "venv" ".venv" "../venv" "../.venv"; do
+        if [ -f "$venv_dir/bin/python" ]; then
+            if $venv_dir/bin/python -c "import SuperClaude" 2>/dev/null; then
+                echo "$(realpath $venv_dir/bin/python)"
+                return 0
+            fi
+        fi
+    done
+    
+    # Check system Python
+    for python in "python3" "python" "/usr/bin/python3" "/usr/local/bin/python3"; do
+        if command -v $python &> /dev/null; then
+            if $python -c "import SuperClaude" 2>/dev/null; then
+                echo "$python"
+                return 0
+            fi
+        fi
+    done
+    
+    # Default to python3
+    echo "python3"
+}
+
 # Setup MCP configuration
 setup_mcp_config() {
     echo -e "\n${YELLOW}Setting up MCP configuration...${NC}"
@@ -831,18 +876,28 @@ setup_mcp_config() {
         # Backup existing config
         cp "$CLAUDE_CONFIG" "$CLAUDE_CONFIG.backup.$(date +%Y%m%d%H%M%S)"
         
+        # Detect Python with SuperClaude
+        PYTHON_PATH=$(detect_superclaude_python)
+        
         # Use jq to add/update MCP server configuration if available
         if command -v jq &> /dev/null; then
             # Add or update the mcpServers configuration
-            jq --arg path "$INSTALL_PATH" '.mcpServers = (.mcpServers // {}) | .mcpServers["superclaude-enterprise"] = {
+            jq --arg path "$INSTALL_PATH" --arg python "$PYTHON_PATH" '.mcpServers = (.mcpServers // {}) | .mcpServers["superclaude-enterprise"] = {
                 "command": "node",
                 "args": [$path + "/dist/mcp-server/index.js"],
-                "description": "SuperClaude Enterprise MCP Server"
+                "description": "SuperClaude Enterprise MCP Server",
+                "env": {
+                    "SUPERCLAUDE_PYTHON": $python
+                }
             }' "$CLAUDE_CONFIG" > "$CLAUDE_CONFIG.tmp" && mv "$CLAUDE_CONFIG.tmp" "$CLAUDE_CONFIG"
             echo -e "${GREEN}✓ Updated Claude configuration with MCP server${NC}"
+            echo -e "${BLUE}  Using Python: $PYTHON_PATH${NC}"
         else
             # Use Python as fallback for JSON processing
             echo -e "${YELLOW}Using Python for JSON processing...${NC}"
+            
+            # Detect Python with SuperClaude
+            PYTHON_PATH=$(detect_superclaude_python)
             
             # Create Python script to update JSON
             python3 << PYTHON_SCRIPT
@@ -867,7 +922,10 @@ if 'mcpServers' not in config:
 config['mcpServers']['superclaude-enterprise'] = {
     'command': 'node',
     'args': [install_path + '/dist/mcp-server/index.js'],
-    'description': 'SuperClaude Enterprise MCP Server'
+    'description': 'SuperClaude Enterprise MCP Server',
+    'env': {
+        'SUPERCLAUDE_PYTHON': "$PYTHON_PATH"
+    }
 }
 
 # Write updated config
@@ -875,6 +933,7 @@ with open(config_path, 'w') as f:
     json.dump(config, f, indent=2)
 
 print("✓ Updated Claude configuration with MCP server")
+print(f"  Using Python: $PYTHON_PATH")
 PYTHON_SCRIPT
             
             if [ $? -eq 0 ]; then

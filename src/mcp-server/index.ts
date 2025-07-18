@@ -16,6 +16,8 @@ import { commandMatcher } from '../utils/command-matcher.js';
 import { normalizePersonaNames } from '../utils/persona-mapping.js';
 import { HealthCheck } from './health.js';
 import { SessionManager } from '../integrations/session/SessionManager.js';
+import { ExtensionManager } from '../extensions/core/ExtensionManager.js';
+import { logger } from '../utils/logger.js';
 
 // Tool schemas
 const NaturalLanguageToolSchema = z.object({
@@ -38,6 +40,25 @@ const ConflictResolutionToolSchema = z.object({
 const claudeCodeBridge = new ClaudeCodeBridge();
 const healthCheck = new HealthCheck();
 const sessionManager = new SessionManager();
+
+// Initialize ExtensionManager for SuperClaude integration
+let extensionManager: ExtensionManager | null = null;
+
+// Initialize Extension Manager asynchronously
+(async () => {
+  try {
+    // Load config using the config manager
+    const { loadConfig } = await import('../utils/config.js');
+    const config = await loadConfig();
+    
+    extensionManager = new ExtensionManager(config);
+    await extensionManager.initialize();
+    logger.info('ExtensionManager initialized successfully in MCP server');
+  } catch (error) {
+    logger.error('Failed to initialize ExtensionManager:', error);
+    logger.warn('MCP server running without SuperClaude integration');
+  }
+})();
 
 // Create MCP server
 const server = new Server(

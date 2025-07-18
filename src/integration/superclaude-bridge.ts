@@ -6,6 +6,7 @@
 import { spawn, exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
+import * as fs from 'fs';
 import { EventEmitter } from 'events';
 import { ConfigManager } from '../config/config-manager';
 
@@ -41,11 +42,10 @@ export class SuperClaudeBridge extends EventEmitter {
     this.pythonCommand = config.pythonPath || 'python3';
     this.cacheEnabled = this.configManager.getExecutionConfig().cacheEnabled;
     
-    // Check if we're in a virtual environment
-    if (process.env.VIRTUAL_ENV) {
-      this.pythonCommand = path.join(process.env.VIRTUAL_ENV, 'bin', 'python');
-      this.emit('info', `Using virtual environment Python: ${this.pythonCommand}`);
-    }
+    // Initialize Python command detection
+    this.detectAndSetPythonCommand().catch(err => {
+      this.emit('error', `Failed to detect Python command: ${err.message}`);
+    });
     
     // Log configuration for debugging
     this.emit('info', `SuperClaude config: ${JSON.stringify(config, null, 2)}`);
@@ -280,5 +280,82 @@ export class SuperClaudeBridge extends EventEmitter {
         error: error
       };
     }
+  }
+  
+  /**
+   * Detect and set the appropriate Python command
+   * This method is called during initialization
+   */
+  private async detectAndSetPythonCommand(): Promise<void> {
+    // Priority order for Python detection
+    const candidates = [];
+    
+    // 1. Environment variable (highest priority)
+    if (process.env.SUPERCLAUDE_PYTHON) {
+      candidates.push({
+        name: 'SUPERCLAUDE_PYTHON env var',
+        path: process.env.SUPERCLAUDE_PYTHON
+      });
+    }
+    
+    // 2. Configuration file
+    const configPython = this.configManager.getSuperClaudeConfig()?.pythonPath;
+    if (configPython && configPython !== 'python3') {
+      candidates.push({
+        name: 'Config file',
+        path: configPython
+      });
+    }
+    
+    // 3. Active virtual environment
+    if (process.env.VIRTUAL_ENV) {
+      candidates.push({
+        name: 'VIRTUAL_ENV',
+        path: path.join(process.env.VIRTUAL_ENV, 'bin', 'python')
+      });
+    }
+    
+    // 4. Common virtual environment locations
+    const projectRoot = path.join(__dirname, '../..');
+    const venvPaths = [
+      { name: 'Project venv', path: path.join(projectRoot, 'venv', 'bin', 'python') },
+      { name: 'Project .venv', path: path.join(projectRoot, '.venv', 'bin', 'python') },
+      { name: 'CWD venv', path: path.join(process.cwd(), 'venv', 'bin', 'python') },
+      { name: 'CWD .venv', path: path.join(process.cwd(), '.venv', 'bin', 'python') }
+    ];
+    
+    // Check which venv paths exist
+    for (const venv of venvPaths) {
+      if (fs.existsSync(venv.path)) {
+        candidates.push(venv);
+      }
+    }
+    
+    // 5. System Python paths
+    candidates.push(
+      { name: 'python3', path: 'python3' },
+      { name: 'python', path: 'python' }
+    );
+    
+    // Test each candidate
+    for (const candidate of candidates) {
+      try {
+        const { stdout } = await execAsync(
+          `${candidate.path} -c "import SuperClaude; print('found')"`
+        );
+        
+        if (stdout.includes('found')) {
+          this.pythonCommand = candidate.path;
+          this.emit('info', `Using Python from ${candidate.name}: ${candidate.path}`);
+          return;
+        }
+      } catch {
+        // Try next candidate
+      }
+    }
+    
+    // Fallback to python3
+    this.emit('warn', 'No Python with SuperClaude found, using default python3');
+    this.pythonCommand = 'python3';
   }
 }

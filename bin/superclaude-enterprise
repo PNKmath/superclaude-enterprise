@@ -1,17 +1,21 @@
 #!/usr/bin/env node
 
-// Change to the package directory to ensure proper module resolution
-const path = require('path');
-const fs = require('fs');
+// ES Module compatible wrapper
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Find the actual package directory
 let packageDir = __dirname;
-while (!fs.existsSync(path.join(packageDir, 'package.json')) && packageDir !== '/') {
-  packageDir = path.dirname(packageDir);
+while (!existsSync(join(packageDir, 'package.json')) && packageDir !== '/') {
+  packageDir = dirname(packageDir);
 }
 
 // Change to package directory for proper module resolution
 process.chdir(packageDir);
 
-// Now require the main module
-require('../dist/index.js');
+// Now import the main module
+import('../dist/index.js');
