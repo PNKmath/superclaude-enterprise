@@ -32,6 +32,7 @@ export class SuperClaudeBridge extends EventEmitter {
   private cacheEnabled: boolean;
   private cache: Map<string, ExecutionResult> = new Map();
   private configManager: ConfigManager;
+  private initPromise: Promise<void>;
 
   constructor(superclaudePath?: string) {
     super();
@@ -43,7 +44,7 @@ export class SuperClaudeBridge extends EventEmitter {
     this.cacheEnabled = this.configManager.getExecutionConfig().cacheEnabled;
     
     // Initialize Python command detection
-    this.detectAndSetPythonCommand().catch(err => {
+    this.initPromise = this.detectAndSetPythonCommand().catch(err => {
       this.emit('error', `Failed to detect Python command: ${err.message}`);
     });
     
@@ -65,6 +66,11 @@ export class SuperClaudeBridge extends EventEmitter {
    */
   async validate(): Promise<boolean> {
     try {
+      // Wait for Python detection to complete
+      if (this.initPromise) {
+        await this.initPromise;
+      }
+      
       // Try to validate Python module installation
       const { stdout } = await execAsync(
         `${this.pythonCommand} -c "import SuperClaude; print('valid')"`

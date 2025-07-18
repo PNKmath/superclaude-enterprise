@@ -93,7 +93,13 @@ export class ExtensionManager {
     this.superClaudeBridge.on('executing', (data) => this.logger.debug('Executing:', data));
     this.superClaudeBridge.on('stdout', (data) => this.logger.debug(data));
     this.superClaudeBridge.on('stderr', (data) => this.logger.warn(data));
-    this.superClaudeBridge.on('error', (error) => this.logger.error('Bridge error:', error));
+    this.superClaudeBridge.on('error', (error) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Bridge error: ${errorMessage}`);
+      if (error instanceof Error && error.stack) {
+        this.logger.debug('Bridge error stack:', error.stack);
+      }
+    });
     this.superClaudeBridge.on('completed', (result) => this.logger.info('Bridge completed:', result));
   }
 
@@ -101,15 +107,17 @@ export class ExtensionManager {
     this.logger.info('Initializing SuperClaude Enterprise Extension...');
     
     try {
-      // Validate SuperClaude bridge first (this sets up the correct Python path)
+      // First detect and set the correct Python path
+      const pythonCmd = await this.detectPythonCommand();
+      this.superClaudeBridge.setPythonCommand(pythonCmd);
+      this.logger.info(`Using Python: ${pythonCmd}`);
+      
+      // Then validate SuperClaude bridge with the correct Python
       const bridgeValid = await this.superClaudeBridge.validate();
       if (!bridgeValid) {
         this.logger.warn('SuperClaude bridge validation failed - running in standalone mode');
         // Continue initialization in standalone mode instead of throwing
       }
-      
-      // Then verify SuperClaude installation with the correct Python
-      await this.verifySuperClaude();
       
       // Initialize all components
       await Promise.all([
