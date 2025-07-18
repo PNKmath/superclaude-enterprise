@@ -1,4 +1,4 @@
-import { ExecutionContext } from './types';
+import { ExecutionContext } from './types.js';
 
 export class ContextAnalyzer {
   private contextRules: Map<string, any>;

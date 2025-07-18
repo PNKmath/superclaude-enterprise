@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { ExtensionManager } from './extensions/core/ExtensionManager';
-import { logger } from './utils/logger';
-import { loadConfig } from './utils/config';
+import { ExtensionManager } from './extensions/core/ExtensionManager.js';
+import { logger } from './utils/logger.js';
+import { loadConfig } from './utils/config.js';
 import chalk from 'chalk';
 import { version } from '../package.json';
 

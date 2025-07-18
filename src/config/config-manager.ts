@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { PathResolver } from '../utils/path-resolver';
+import { PathResolver } from '../utils/path-resolver.js';
 
 // ESM compatibility
 const __filename = fileURLToPath(import.meta.url);

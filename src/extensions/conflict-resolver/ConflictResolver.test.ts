@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
-import { ConflictResolver } from './ConflictResolver';
-import { ConflictType, ResolutionStrategy } from './types';
+import { ConflictResolver } from './ConflictResolver.js';
+import { ConflictType, ResolutionStrategy } from './types.js';
 
 describe('ConflictResolver', () => {
   let resolver: ConflictResolver;

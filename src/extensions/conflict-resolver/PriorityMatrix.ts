@@ -1,4 +1,4 @@
-import { PersonaPriority } from './types';
+import { PersonaPriority } from './types.js';
 
 export class PriorityMatrix {
   private matrix: Map<string, PersonaPriority>;

@@ -6,11 +6,11 @@ import {
   ResolvedContext,
   ResolutionStrategy,
   ConflictType 
-} from './types';
-import { PriorityMatrix } from './PriorityMatrix';
-import { NegotiationEngine } from './NegotiationEngine';
-import { ContextAnalyzer } from './ContextAnalyzer';
-import { ConflictLogger } from './ConflictLogger';
+} from './types.js';
+import { PriorityMatrix } from './PriorityMatrix.js';
+import { NegotiationEngine } from './NegotiationEngine.js';
+import { ContextAnalyzer } from './ContextAnalyzer.js';
+import { ConflictLogger } from './ConflictLogger.js';
 
 export class ConflictResolver {
   private priorityMatrix: PriorityMatrix;

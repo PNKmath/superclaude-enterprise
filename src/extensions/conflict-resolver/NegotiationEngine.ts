@@ -1,5 +1,5 @@
 import { Logger } from 'pino';
-import { Conflict, ExecutionContext, Persona } from './types';
+import { Conflict, ExecutionContext, Persona } from './types.js';
 
 export interface NegotiationResult {
   agreedPersonas: Persona[];
