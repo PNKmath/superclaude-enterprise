@@ -1,6 +1,15 @@
 import pino from 'pino';
 
-export const createLogger = (name: string) => {
+export const createLogger = (name: string, options?: any) => {
+  // Allow custom transport configuration
+  if (options?.transport) {
+    return pino({
+      name,
+      level: process.env.LOG_LEVEL || 'info',
+      ...options
+    });
+  }
+  
   return pino({
     name,
     level: process.env.LOG_LEVEL || 'info',

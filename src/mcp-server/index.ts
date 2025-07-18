@@ -17,7 +17,15 @@ import { normalizePersonaNames } from '../utils/persona-mapping.js';
 import { HealthCheck } from './health.js';
 import { SessionManager } from '../integrations/session/SessionManager.js';
 import { ExtensionManager } from '../extensions/core/ExtensionManager.js';
-import { logger } from '../utils/logger.js';
+import { createLogger } from '../utils/logger.js';
+
+// Create logger that writes to stderr for MCP compatibility
+const logger = createLogger('superclaude-enterprise', {
+  transport: {
+    target: 'pino/file',
+    options: { destination: 2 } // stderr
+  }
+});
 
 // Tool schemas
 const NaturalLanguageToolSchema = z.object({
@@ -43,22 +51,34 @@ const sessionManager = new SessionManager();
 
 // Initialize ExtensionManager for SuperClaude integration
 let extensionManager: ExtensionManager | null = null;
+// Extension manager ready flag removed - not needed
 
-// Initialize Extension Manager asynchronously
-(async () => {
+// Initialize Extension Manager
+async function initializeExtensionManager() {
   try {
+    // Suppress stdout logging for MCP compatibility
+    const originalConsoleLog = console.log;
+    console.log = () => {}; // Disable console.log
+    
     // Load config using the config manager
     const { loadConfig } = await import('../utils/config.js');
     const config = await loadConfig();
     
+    // Create ExtensionManager with production config to suppress logs
+    process.env.NODE_ENV = 'production'; // Force production mode
     extensionManager = new ExtensionManager(config);
     await extensionManager.initialize();
+    
+    // Restore console.log
+    console.log = originalConsoleLog;
+    
+    // Extension manager is now ready
     logger.info('ExtensionManager initialized successfully in MCP server');
   } catch (error) {
     logger.error('Failed to initialize ExtensionManager:', error);
     logger.warn('MCP server running without SuperClaude integration');
   }
-})();
+}
 
 // Create MCP server
 const server = new Server(
@@ -375,6 +395,9 @@ if (!process.listenerCount('unhandledRejection')) {
 
 // Start the server
 async function main() {
+  // Initialize ExtensionManager before starting server
+  await initializeExtensionManager();
+  
   const transport = new StdioServerTransport();
   
   // Handle stdin/stdout errors silently
@@ -390,7 +413,7 @@ async function main() {
   process.stdin.once('close', cleanup);
   
   await server.connect(transport);
-  // Don't log to stderr - it interferes with MCP protocol
+  // Server is now ready to handle requests
   
   // Start health check only if explicitly enabled
   if (process.env.ENABLE_HEALTH_CHECK === 'true') {
