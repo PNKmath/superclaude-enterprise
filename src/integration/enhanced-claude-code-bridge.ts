@@ -48,7 +48,7 @@ export class EnhancedClaudeCodeBridge extends EventEmitter {
   constructor(enableEnhanced: boolean = true) {
     super();
     this.parser = new EnhancedCommandParser();
-    this.sessionManager = new SessionManager();
+    this.sessionManager = SessionManager.getInstance();
     this.enableEnhancedMode = enableEnhanced;
   }
 

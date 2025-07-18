@@ -7,10 +7,10 @@ describe('Full SuperClaude Integration Tests', () => {
   const parser = new EnhancedCommandParser();
   const selector = new GeminiStrategySelector();
   const hybridDetector = new HybridModeDetector();
-  const sessionManager = new SessionManager();
+  const sessionManager = SessionManager.getInstance();
 
   beforeEach(() => {
-    sessionManager.clearSession('test-session');
+    SessionManager.resetInstance();
   });
 
   describe('Enhanced NLP', () => {
@@ -114,8 +114,8 @@ describe('Full SuperClaude Integration Tests', () => {
         sessionObj.lastActivity = new Date(Date.now() - 31 * 60 * 1000); // 31 minutes ago
       }
       
-      sessionManager.clearSession(session.id);
-      const expiredSession = sessionManager.getSession(session.id);
+      SessionManager.getInstance().clearSession(session.id);
+      const expiredSession = SessionManager.getInstance().getSession(session.id);
       expect(expiredSession).toBeUndefined();
     });
 

@@ -32,9 +32,30 @@ export interface Session {
 }
 
 export class SessionManager {
+  private static instance: SessionManager | null = null;
   private sessions = new Map<string, Session>();
   private sessionTimeout = 30 * 60 * 1000; // 30 minutes
   private cleanupTimers = new Map<string, NodeJS.Timeout>();
+  
+  /**
+   * Get singleton instance
+   */
+  static getInstance(): SessionManager {
+    if (!SessionManager.instance) {
+      SessionManager.instance = new SessionManager();
+    }
+    return SessionManager.instance;
+  }
+  
+  /**
+   * Reset singleton instance (for testing)
+   */
+  static resetInstance(): void {
+    if (SessionManager.instance) {
+      SessionManager.instance.cleanup();
+      SessionManager.instance = null;
+    }
+  }
   
   /**
    * Create a new session

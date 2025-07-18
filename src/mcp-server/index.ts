@@ -47,7 +47,7 @@ const ConflictResolutionToolSchema = z.object({
 // Initialize components
 const claudeCodeBridge = new ClaudeCodeBridge();
 const healthCheck = new HealthCheck();
-const sessionManager = new SessionManager();
+const sessionManager = SessionManager.getInstance();
 
 // Initialize ExtensionManager for SuperClaude integration
 let extensionManager: ExtensionManager | null = null;
