@@ -1,6 +1,9 @@
 import { Logger } from 'pino';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import { existsSync } from 'fs';
+import { exec as execCallback } from 'child_process';
+import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { ConflictResolver } from '../conflict-resolver/ConflictResolver';
@@ -74,7 +77,7 @@ export class ExtensionManager {
 
     for (const p of possiblePaths) {
       try {
-        if (require('fs').existsSync(p)) {
+        if (existsSync(p)) {
           this.logger?.info(`Found SuperClaude at: ${p}`);
           return p;
         }
@@ -375,9 +378,7 @@ export class ExtensionManager {
    * 5. System Python with SuperClaude installed
    */
   private async detectPythonCommand(): Promise<string> {
-    const { exec } = require('child_process');
-    const { promisify } = require('util');
-    const execAsync = promisify(exec);
+    const execAsync = promisify(execCallback);
     
     const candidates: Array<{name: string, path: string}> = [];
     
