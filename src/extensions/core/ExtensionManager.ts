@@ -334,34 +334,6 @@ export class ExtensionManager {
   }
 
   // Private helper methods
-  
-  private async verifySuperClaude(): Promise<void> {
-    try {
-      // Check if SuperClaude is installed as a Python package
-      const { exec } = require('child_process');
-      const { promisify } = require('util');
-      const execAsync = promisify(exec);
-      
-      // Get Python command from various sources
-      const pythonCmd = await this.detectPythonCommand();
-      
-      // Try to import SuperClaude
-      const checkCmd = `${pythonCmd} -c "import SuperClaude; print('SuperClaude found')"`;
-      const { stdout } = await execAsync(checkCmd);
-      
-      if (stdout.includes('SuperClaude found')) {
-        this.logger.info('SuperClaude Python package verified');
-        // Update the bridge to use Python module execution
-        this.superClaudeBridge.setPythonCommand(pythonCmd);
-      } else {
-        throw new Error('SuperClaude module not found');
-      }
-    } catch (error) {
-      this.logger.warn('SuperClaude not found. Running in standalone mode.');
-      this.logger.debug({ error }, 'SuperClaude verification error');
-      // Don't throw error - allow standalone operation
-    }
-  }
 
   private async buildExecutionContext(command: string, options: CommandOptions): Promise<any> {
     return {
