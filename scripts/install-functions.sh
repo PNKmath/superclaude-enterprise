@@ -1006,9 +1006,51 @@ EOF
         fi
     fi
     
-    # Also create project-specific configuration if in a project directory
-    if [ -d ".claude" ] || mkdir -p ".claude" 2>/dev/null; then
-        cat > ".claude/settings.local.json" << EOF
+    # Also update project-specific configuration if in a project directory
+    if [ -d ".claude" ]; then
+        local project_config=".claude/settings.local.json"
+        if [ -f "$project_config" ]; then
+            echo -e "${BLUE}Updating existing project-specific configuration...${NC}"
+            # Backup existing config
+            cp "$project_config" "$project_config.backup.$(date +%Y%m%d%H%M%S)"
+            
+            # Update configuration while preserving existing content
+            if command -v jq &> /dev/null; then
+                jq --arg path "$INSTALL_PATH" '.mcpServers = (.mcpServers // {}) | .mcpServers["superclaude-enterprise"] = {
+                    "command": "node",
+                    "args": [$path + "/dist/mcp-server/index.js"],
+                    "description": "SuperClaude Enterprise MCP Server"
+                }' "$project_config" > "$project_config.tmp" && mv "$project_config.tmp" "$project_config"
+                echo -e "${GREEN}✓ Updated project-specific MCP configuration${NC}"
+            else
+                # Use Python to merge configurations
+                python3 -c "
+import json
+config_path = '$project_config'
+install_path = '$INSTALL_PATH'
+try:
+    with open(config_path, 'r') as f:
+        config = json.load(f)
+except:
+    config = {}
+# Ensure mcpServers exists
+if 'mcpServers' not in config:
+    config['mcpServers'] = {}
+# Add or update superclaude-enterprise
+config['mcpServers']['superclaude-enterprise'] = {
+    'command': 'node',
+    'args': [install_path + '/dist/mcp-server/index.js'],
+    'description': 'SuperClaude Enterprise MCP Server'
+}
+# Write updated config
+with open(config_path, 'w') as f:
+    json.dump(config, f, indent=2)
+print('✓ Updated project-specific MCP configuration')
+"
+            fi
+        else
+            # Create new project config if it doesn't exist
+            cat > "$project_config" << EOF
 {
   "mcpServers": {
     "superclaude-enterprise": {
@@ -1019,7 +1061,8 @@ EOF
   }
 }
 EOF
-        echo -e "${GREEN}✓ Created project-specific MCP configuration${NC}"
+            echo -e "${GREEN}✓ Created project-specific MCP configuration${NC}"
+        fi
     fi
     
     # Verify MCP configuration

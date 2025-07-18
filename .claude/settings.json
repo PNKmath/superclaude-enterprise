@@ -2,85 +2,101 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": {
-          "tool_name": "bash",
-          "query": "rm -rf"
-        },
-        "command": "echo 'BLOCKED: Dangerous rm -rf command detected by SuperClaude Enterprise' >&2 && exit 2"
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -q 'rm -rf'; then echo 'BLOCKED: Dangerous rm -rf command detected by SuperClaude Enterprise' >&2 && exit 2; fi",
+            "timeout": 5
+          }
+        ]
       },
       {
-        "matcher": {
-          "tool_name": "edit_file",
-          "file_paths": [".env", "*.key", "*.pem", "secrets/*", ".git/*"]
-        },
-        "command": "echo 'BLOCKED: Access to sensitive files not allowed' >&2 && exit 2"
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command", 
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -E '(\\.env|.*\\.key|.*\\.pem|secrets/.*|\\.git/.*)'; then echo 'BLOCKED: Access to sensitive files not allowed' >&2 && exit 2; fi",
+            "timeout": 5
+          }
+        ]
       },
       {
-        "matcher": {
-          "tool_name": "bash",
-          "query": "--skip-validation"
-        },
-        "command": "superclaude-enterprise check-veto security --command \"$CLAUDE_TOOL_INPUT\""
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -q -- '--skip-validation'; then superclaude-enterprise check-veto security --command \"$CLAUDE_TOOL_INPUT\"; fi",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": {
-          "tool_name": "edit_file",
-          "file_paths": ["*.py"]
-        },
-        "command": "echo 'Auto-formatting Python files...' && black $CLAUDE_FILE_PATHS 2>/dev/null && ruff check --fix $CLAUDE_FILE_PATHS 2>/dev/null || true"
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -q '\\.py$'; then echo 'Auto-formatting Python files...' && black \"$CLAUDE_FILE_PATH\" 2>/dev/null && ruff check --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null || true; fi",
+            "timeout": 30
+          }
+        ]
       },
       {
-        "matcher": {
-          "tool_name": "edit_file",
-          "file_paths": ["*.ts", "*.tsx", "*.js", "*.jsx"]
-        },
-        "command": "echo 'Auto-formatting TypeScript/JavaScript files...' && prettier --write $CLAUDE_FILE_PATHS 2>/dev/null && eslint --fix $CLAUDE_FILE_PATHS 2>/dev/null || true"
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -E '\\.(ts|tsx|js|jsx)$'; then echo 'Auto-formatting TypeScript/JavaScript files...' && prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null && eslint --fix \"$CLAUDE_FILE_PATH\" 2>/dev/null || true; fi",
+            "timeout": 30
+          }
+        ]
       },
       {
-        "matcher": {
-          "tool_name": "edit_file",
-          "file_paths": ["src/**/*.ts", "tests/**/*.ts"]
-        },
-        "command": "superclaude-enterprise conflict-check --files \"$CLAUDE_FILE_PATHS\" --personas architect,performance",
-        "run_in_background": true
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -E '^(src|tests)/.*\\.ts$'; then superclaude-enterprise conflict-check --files \"$CLAUDE_FILE_PATH\" --personas architect,performance & fi",
+            "timeout": 15
+          }
+        ]
       },
       {
-        "matcher": {
-          "tool_name": "edit_file",
-          "file_paths": ["*.test.ts", "*.test.js", "*.spec.ts", "*.spec.js"]
-        },
-        "command": "npm test -- --findRelatedTests $CLAUDE_FILE_PATHS 2>/dev/null || true",
-        "run_in_background": true
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -E '\\.(test|spec)\\.(ts|js)$'; then npm test -- --findRelatedTests \"$CLAUDE_FILE_PATH\" 2>/dev/null || true; fi",
+            "timeout": 60
+          }
+        ]
       }
     ],
     "Notification": [
       {
-        "command": "superclaude-enterprise log-notification \"$CLAUDE_NOTIFICATION\""
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "superclaude-enterprise log-notification \"$CLAUDE_NOTIFICATION\"",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "Stop": [
       {
-        "command": "superclaude-enterprise validate-completion --check-tests --check-lint"
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "superclaude-enterprise validate-completion --check-tests --check-lint",
+            "timeout": 30
+          }
+        ]
       }
     ]
-  },
-  "enterprise": {
-    "conflict_resolution": {
-      "enabled": true,
-      "auto_resolve": true,
-      "log_conflicts": true
-    },
-    "gemini_integration": {
-      "enabled": true,
-      "auto_route": true,
-      "cost_threshold": 0.10
-    },
-    "execution_levels": {
-      "default": 2,
-      "dangerous_commands": 3,
-      "production_changes": 4
-    }
   }
 }
