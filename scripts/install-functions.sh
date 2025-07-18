@@ -866,7 +866,9 @@ setup_mcp_config() {
     
     # Claude Code uses ~/.claude.json for configuration
     CLAUDE_CONFIG="$HOME/.claude.json"
-    INSTALL_PATH=$(pwd)
+    # Use absolute path instead of pwd
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    INSTALL_PATH="$(realpath "$SCRIPT_DIR/..")"
     
     echo -e "${BLUE}Configuring MCP server in Claude Code settings...${NC}"
     
