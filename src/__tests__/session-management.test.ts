@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SessionManager } from '../integrations/session/SessionManager.js';
 import { ClaudeCodeBridge } from '../integration/enhanced-claude-code-bridge.js';
 
@@ -19,7 +20,7 @@ describe('Session Management Integration', () => {
     SessionManager.resetInstance();
   });
 
-  test('Should reproduce session not found error with different SessionManager instances', async () => {
+  it('Should reproduce session not found error with different SessionManager instances', async () => {
     // Create session in first instance
     const session = await sessionManager1.createSession('test-user');
     
@@ -35,7 +36,7 @@ describe('Session Management Integration', () => {
     ).rejects.toThrow(`Session ${session.id} not found`);
   });
 
-  test('Should handle session operations when using same SessionManager instance', async () => {
+  it('Should handle session operations when using same SessionManager instance', async () => {
     const session = await sessionManager1.createSession('test-user');
     
     // Add turn using same instance - should work
@@ -53,7 +54,7 @@ describe('Session Management Integration', () => {
     expect(updatedSession?.turns).toHaveLength(1);
   });
 
-  test('ClaudeCodeBridge should use shared SessionManager instance', async () => {
+  it('ClaudeCodeBridge should use shared SessionManager instance', async () => {
     // Get singleton instance
     const sharedSessionManager = SessionManager.getInstance();
     
@@ -73,7 +74,7 @@ describe('Session Management Integration', () => {
     expect(updatedSession?.turns).toHaveLength(1);
   });
 
-  test('Should verify singleton SessionManager pattern', async () => {
+  it('Should verify singleton SessionManager pattern', async () => {
     // Create two ClaudeCodeBridge instances
     const bridge1 = new ClaudeCodeBridge();
     const bridge2 = new ClaudeCodeBridge();

@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ConflictResolver } from './ConflictResolver.js';
 import { ConflictType, ResolutionStrategy } from './types.js';
 
@@ -8,10 +8,10 @@ describe('ConflictResolver', () => {
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn()
+      info: vi.fn(),
+      error: vi.fn(),
+      warn: vi.fn(),
+      debug: vi.fn()
     };
     resolver = new ConflictResolver(mockLogger);
   });
@@ -177,7 +177,7 @@ describe('ConflictResolver', () => {
   describe('Error Handling', () => {
     it('should fallback to highest priority on error', async () => {
       // Mock an error in conflict detection
-      jest.spyOn(resolver as any, 'detectConflicts').mockRejectedValue(
+      vi.spyOn(resolver as any, 'detectConflicts').mockRejectedValue(
         new Error('Test error')
       );
 

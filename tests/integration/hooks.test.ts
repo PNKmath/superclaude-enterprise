@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { HookManager, HookEvent, HookContext } from '../../src/extensions/hooks-v4/HookManager';
 import { createLogger } from '../../src/utils/logger';
 import * as fs from 'fs/promises';

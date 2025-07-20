@@ -78,7 +78,10 @@ export class AICommandParser {
       const ruleResult = this.ruleParser.parse(input);
       
       // Step 2: Evaluate complexity (for logging/debugging)
-      // const complexity = this.evaluateComplexity(input, ruleResult);
+      const complexity = this.evaluateComplexity(input, ruleResult);
+      if (process.env.DEBUG) {
+        console.debug(`Input complexity: ${complexity}`);
+      }
       
       // Step 3: Always use AI if enabled (ignore complexity threshold)
       if (!this.config.enableAI) {
@@ -151,6 +154,12 @@ export class AICommandParser {
     
     try {
       const result = await this.model.generateContent(prompt);
+      
+      // Check if result and response exist
+      if (!result || !result.response) {
+        throw new Error('Invalid response from Gemini API');
+      }
+      
       const responseText = result.response.text();
       
       return this.parseAIResponse(responseText);

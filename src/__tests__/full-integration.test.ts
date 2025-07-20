@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach } from 'vitest';
 import { EnhancedCommandParser } from '../utils/enhanced-command-parser.js';
 import { GeminiStrategySelector } from '../integrations/gemini-cli/GeminiStrategySelector.js';
 import { HybridModeDetector } from '../integrations/gemini-cli/HybridModeDetector.js';
@@ -14,7 +15,7 @@ describe('Full SuperClaude Integration Tests', () => {
   });
 
   describe('Enhanced NLP', () => {
-    test('Korean Security Analysis with Full Context', () => {
+    it('Korean Security Analysis with Full Context', () => {
       const input = "SuperClaude를 사용해서 auth.js의 보안 취약점을 검사해줘";
       const result = parser.parse(input);
       
@@ -25,7 +26,7 @@ describe('Full SuperClaude Integration Tests', () => {
       expect(result.suggestedPersonas).toContain('security');
     });
 
-    test('Complex Performance Analysis', () => {
+    it('Complex Performance Analysis', () => {
       const input = "analyze strange memory leak in production environment";
       const result = parser.parse(input);
       
@@ -34,7 +35,7 @@ describe('Full SuperClaude Integration Tests', () => {
       expect(result.suggestedPersonas).toContain('performance');
     });
 
-    test('Repository Pattern Implementation', () => {
+    it('Repository Pattern Implementation', () => {
       const input = "implement user service following repository pattern";
       const result = parser.parse(input);
       
@@ -43,7 +44,7 @@ describe('Full SuperClaude Integration Tests', () => {
       expect(result.suggestedPersonas).toContain('architect');
     });
 
-    test('Full Command Building', () => {
+    it('Full Command Building', () => {
       const input = "SuperClaude를 사용해서 auth.js의 보안 취약점을 검사해줘";
       const result = parser.parse(input);
       const fullCommand = parser.buildFullCommand(result);
@@ -56,7 +57,7 @@ describe('Full SuperClaude Integration Tests', () => {
   });
 
   describe('Hybrid Mode Detection', () => {
-    test('Detects pattern-based implementation', () => {
+    it('Detects pattern-based implementation', () => {
       const command = "implement user service following repository pattern";
       const context = {
         personas: ['backend', 'architect']
@@ -67,7 +68,7 @@ describe('Full SuperClaude Integration Tests', () => {
       expect(result.shouldUseHybrid).toBe(true);
     });
 
-    test('Adaptive mode for complex tasks', () => {
+    it('Adaptive mode for complex tasks', () => {
       const command = "analyze comprehensive system architecture";
       const context = {
         personas: ['analyzer', 'architect']
@@ -80,7 +81,7 @@ describe('Full SuperClaude Integration Tests', () => {
   });
 
   describe('Session Continuity', () => {
-    test('Maintains context across commands', async () => {
+    it('Maintains context across commands', async () => {
       const userId = 'test-user';
       
       // Create session
@@ -103,7 +104,7 @@ describe('Full SuperClaude Integration Tests', () => {
       expect(updatedSession?.context.currentPersonas).toContain('security');
     });
 
-    test('Session expiration', async () => {
+    it('Session expiration', async () => {
       const userId = 'test-user';
       
       const session = await sessionManager.createSession(userId);
@@ -119,7 +120,7 @@ describe('Full SuperClaude Integration Tests', () => {
       expect(expiredSession).toBeUndefined();
     });
 
-    test('Inherits context from previous commands', async () => {
+    it('Inherits context from previous commands', async () => {
       const userId = 'test-user';
       
       // Create session with initial context
@@ -145,7 +146,7 @@ describe('Full SuperClaude Integration Tests', () => {
   });
 
   describe('Full Integration', () => {
-    test('End-to-end Korean command processing', () => {
+    it('End-to-end Korean command processing', () => {
       const input = "SuperClaude를 사용해서 auth.js의 보안 취약점을 검사해줘";
       
       // Parse command

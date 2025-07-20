@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { EnhancedCommandParser } from '../enhanced-command-parser.js';
 
 describe('Enhanced NLP Tests', () => {

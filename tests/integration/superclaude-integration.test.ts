@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { ExtensionManager } from '../../src/extensions/core/ExtensionManager';
 import { loadConfig } from '../../src/utils/config';
 import * as path from 'path';

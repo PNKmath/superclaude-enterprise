@@ -2,7 +2,7 @@
  * Test cases for Gemini Strategy Selection System
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { GeminiStrategySelector } from '../GeminiStrategySelector.js';
 
 describe('GeminiStrategySelector', () => {

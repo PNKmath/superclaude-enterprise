@@ -429,7 +429,6 @@ export class EnhancedCommandParser {
   }
 
   private detectContextualIntents(input: string, intents: string[]): void {
-    const lowerInput = input.toLowerCase();
 
     // Deep thinking patterns
     if (/깊게 생각|think deeply|thoroughly analyze|철저히 분석/i.test(input)) {

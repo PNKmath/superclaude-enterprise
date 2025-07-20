@@ -2,44 +2,43 @@
  * Test for SuperClaude flag filtering in Gemini integration
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { IntegratedGeminiAdapter } from '../IntegratedGeminiAdapter.js';
-import { Logger } from 'pino';
 import { CommandContext } from '../types.js';
 
 // Mock execAsync
-jest.mock('util', () => ({
-  promisify: jest.fn(() => jest.fn().mockResolvedValue({ stdout: 'mocked output', stderr: '' }))
+vi.mock('util', () => ({
+  promisify: vi.fn(() => vi.fn(() => Promise.resolve({ stdout: 'mocked output', stderr: '' })))
 }));
 
 // Mock fs operations
-jest.mock('fs/promises', () => ({
+vi.mock('fs/promises', () => ({
   default: {
-    mkdtemp: jest.fn().mockResolvedValue('/tmp/test'),
-    writeFile: jest.fn().mockResolvedValue(undefined),
-    rm: jest.fn().mockResolvedValue(undefined)
+    mkdtemp: vi.fn(() => Promise.resolve('/tmp/test')),
+    writeFile: vi.fn(() => Promise.resolve()),
+    rm: vi.fn(() => Promise.resolve())
   }
 }));
 
 describe('IntegratedGeminiAdapter Flag Filtering', () => {
   let adapter: IntegratedGeminiAdapter;
-  let mockLogger: Logger;
+  let mockLogger: any;
 
   beforeEach(() => {
     mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn()
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn()
     } as any;
 
     adapter = new IntegratedGeminiAdapter(mockLogger, {
-      costEstimation: {
-        enabled: true,
-        models: {
-          claude: { pricePerToken: 0.01, maxTokens: 100000 },
-          gemini: { pricePerToken: 0.001, maxTokens: 50000 }
-        }
+      enabled: true,
+      autoRouting: true,
+      costThreshold: 1000,
+      quotaManagement: {
+        dailyLimit: 10000,
+        rateLimit: '100/minute'
       },
       strategy: {
         autoSelectMode: false,
@@ -77,7 +76,7 @@ describe('IntegratedGeminiAdapter Flag Filtering', () => {
     };
 
     // Spy on buildGeminiCommand method
-    const buildCommandSpy = jest.spyOn(adapter as any, 'buildGeminiCommand');
+    const buildCommandSpy = vi.spyOn(adapter as any, 'buildGeminiCommand');
     
     try {
       await adapter.executeWithGemini('/sc:analyze test.ts', context);
@@ -110,11 +109,11 @@ describe('IntegratedGeminiAdapter Flag Filtering', () => {
     
     // Check that debug logging was called for filtered flags
     const debugCalls = mockLogger.debug.mock.calls;
-    expect(debugCalls.some(call => call[0].includes('--uc'))).toBe(true);
-    expect(debugCalls.some(call => call[0].includes('--think'))).toBe(true);
+    expect(debugCalls.some((call: any[]) => call[0].includes('--uc'))).toBe(true);
+    expect(debugCalls.some((call: any[]) => call[0].includes('--think'))).toBe(true);
   });
 
-  it('should add compression instructions to prompt when --uc flag is present', async () => {
+  it('should filter --uc flag as it is handled by AI compression', async () => {
     const context: CommandContext = {
       command: '/sc:analyze',
       targetFiles: ['test.ts'],
@@ -124,8 +123,8 @@ describe('IntegratedGeminiAdapter Flag Filtering', () => {
       personas: []
     };
 
-    // Spy on buildAdaptivePrompt method
-    const buildPromptSpy = jest.spyOn(adapter as any, 'buildAdaptivePrompt');
+    // Spy on buildGeminiCommand method
+    const buildCommandSpy = vi.spyOn(adapter as any, 'buildGeminiCommand');
     
     try {
       await adapter.executeWithGemini('/sc:analyze test.ts', context);
@@ -133,10 +132,13 @@ describe('IntegratedGeminiAdapter Flag Filtering', () => {
       // Expected to fail due to mocking
     }
 
-    // Check that prompt includes compression instructions
-    const promptLines = buildPromptSpy.mock.results[0]?.value;
-    expect(promptLines).toContain('## Output Format: ULTRA-COMPRESSED');
-    expect(promptLines).toContain('- Target 30-50% token reduction');
+    // Check that --uc flag is filtered out
+    const generatedCommand = buildCommandSpy.mock.results[0]?.value;
+    expect(generatedCommand).not.toContain('--uc');
+    
+    // Check that debug logging was called for filtered flag
+    const debugCalls = mockLogger.debug.mock.calls;
+    expect(debugCalls.some((call: any[]) => call[0].includes('--uc'))).toBe(true);
   });
 
   it('should handle all SuperClaude flag categories', async () => {
@@ -162,7 +164,7 @@ describe('IntegratedGeminiAdapter Flag Filtering', () => {
       context.flags![flag] = true;
     });
 
-    const buildCommandSpy = jest.spyOn(adapter as any, 'buildGeminiCommand');
+    const buildCommandSpy = vi.spyOn(adapter as any, 'buildGeminiCommand');
     
     try {
       await adapter.executeWithGemini('/sc:analyze test.ts', context);

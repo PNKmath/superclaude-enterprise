@@ -2,7 +2,7 @@
  * Integration test for Gemini strategy system
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
 import { GeminiStrategySelector } from '../GeminiStrategySelector.js';
 import { GeminiExtractionTemplates } from '../GeminiExtractionTemplates.js';
 
