@@ -1,0 +1,50 @@
+diff --git a/src/integrations/gemini-cli/IntegratedGeminiAdapter.ts b/src/integrations/gemini-cli/IntegratedGeminiAdapter.ts
+index abc123..def456 100644
+--- a/src/integrations/gemini-cli/IntegratedGeminiAdapter.ts
++++ b/src/integrations/gemini-cli/IntegratedGeminiAdapter.ts
+@@ -30,6 +30,9 @@ export interface IntegratedGeminiConfig extends GeminiConfig {
+   };
+ }
+ 
++// SuperClaude-specific flags that should not be passed to Gemini
++const SUPERCLAUDE_ONLY_FLAGS = ['uc', 'ultracompressed', 'answer-only', 'introspect', 'introspection'];
++
+ export class IntegratedGeminiAdapter extends GeminiAdapter {
+   private strategySelector: GeminiStrategySelector;
+   private integratedConfig: IntegratedGeminiConfig;
+@@ -283,6 +286,7 @@ export class IntegratedGeminiAdapter extends GeminiAdapter {
+     command: string,
+     _context: CommandContext,
+     strategy: GeminiStrategy
+   ): string[] {
+     const prompt: string[] = [];
+     
+@@ -315,6 +319,16 @@ export class IntegratedGeminiAdapter extends GeminiAdapter {
+       });
+     }
+     
++    // Add compression instructions if --uc flag is present
++    if (_context.flags?.uc || _context.flags?.ultracompressed) {
++      prompt.push('\n## Output Format: ULTRA-COMPRESSED');
++      prompt.push('- Provide minimal, concise output');
++      prompt.push('- Use symbols and abbreviations where appropriate');
++      prompt.push('- Omit verbose explanations');
++      prompt.push('- Focus on essential information only');
++      prompt.push('- Target 30-50% token reduction');
++    }
++    
+     // Context level specific instructions
+     switch (strategy.adaptive?.contextLevel) {
+       case 'detailed':
+@@ -356,6 +370,11 @@ export class IntegratedGeminiAdapter extends GeminiAdapter {
+     // Add flags
+     if (_context.flags) {
+       Object.entries(_context.flags).forEach(([flag, value]) => {
++        // Skip SuperClaude-specific flags that Gemini doesn't understand
++        if (SUPERCLAUDE_ONLY_FLAGS.includes(flag)) {
++          this.logger.debug(`Filtering SuperClaude-specific flag: --${flag}`);
++          return;
++        }
+         if (value === true) {
+           geminiCmd += ` --${flag}`;
+         } else if (value !== false) {

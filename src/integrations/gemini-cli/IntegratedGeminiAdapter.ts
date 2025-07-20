@@ -21,6 +21,43 @@ import {
 
 const execAsync = promisify(exec);
 
+// SuperClaude-specific flags that should not be passed to Gemini
+const SUPERCLAUDE_ONLY_FLAGS = [
+  // Compression & Efficiency
+  'uc', 'ultracompressed', 'answer-only',
+  
+  // Planning & Analysis
+  'plan', 'think', 'think-hard', 'ultrathink',
+  
+  // Safety & Validation
+  'validate', 'safe-mode',
+  
+  // MCP Server Control
+  'c7', 'context7', 'seq', 'sequential', 'magic', 'play', 'playwright',
+  'all-mcp', 'no-mcp', 'no-c7', 'no-seq', 'no-magic', 'no-play',
+  
+  // Sub-Agent & Wave Control
+  'delegate', 'concurrency', 'wave-mode', 'wave-strategy',
+  'wave-count', 'wave-delegation', 'wave-threshold',
+  
+  // Scope & Focus
+  'scope', 'focus',
+  
+  // Iterative
+  'loop', 'iterations', 'interactive',
+  
+  // Persona Activation
+  'persona-architect', 'persona-frontend', 'persona-backend', 'persona-analyzer',
+  'persona-security', 'persona-mentor', 'persona-refactorer', 'persona-performance',
+  'persona-qa', 'persona-devops', 'persona-scribe',
+  
+  // Introspection
+  'introspect', 'introspection',
+  
+  // Hybrid mode
+  'hybrid-mode'
+];
+
 export interface IntegratedGeminiConfig extends GeminiConfig {
   strategy: {
     autoSelectMode: boolean;
@@ -314,6 +351,51 @@ export class IntegratedGeminiAdapter extends GeminiAdapter {
       });
     }
     
+    // Add compression instructions if --uc flag is present
+    if (_context.flags?.uc || _context.flags?.ultracompressed) {
+      prompt.push('\n## Output Format: ULTRA-COMPRESSED');
+      prompt.push('- Provide minimal, concise output');
+      prompt.push('- Use symbols and abbreviations where appropriate');
+      prompt.push('- Omit verbose explanations');
+      prompt.push('- Focus on essential information only');
+      prompt.push('- Target 30-50% token reduction');
+    }
+    
+    // Add thinking mode instructions
+    if (_context.flags?.think || _context.flags?.['think-hard'] || _context.flags?.ultrathink) {
+      prompt.push('\n## Analysis Mode: DEEP THINKING');
+      if (_context.flags?.ultrathink) {
+        prompt.push('- Perform exhaustive analysis with maximum depth');
+        prompt.push('- Consider all edge cases and implications');
+      } else if (_context.flags?.['think-hard']) {
+        prompt.push('- Conduct thorough system-wide analysis');
+        prompt.push('- Identify architectural implications');
+      } else {
+        prompt.push('- Perform comprehensive multi-file analysis');
+        prompt.push('- Focus on cross-module dependencies');
+      }
+    }
+    
+    // Add validation instructions
+    if (_context.flags?.validate || _context.flags?.['safe-mode']) {
+      prompt.push('\n## Validation Mode: ENABLED');
+      prompt.push('- Perform risk assessment before suggestions');
+      prompt.push('- Validate all assumptions and dependencies');
+      prompt.push('- Flag potential issues and side effects');
+      if (_context.flags?.['safe-mode']) {
+        prompt.push('- Apply conservative approach to all recommendations');
+        prompt.push('- Prioritize stability over optimization');
+      }
+    }
+    
+    // Add verbose instructions
+    if (_context.flags?.verbose) {
+      prompt.push('\n## Output Format: VERBOSE');
+      prompt.push('- Provide detailed explanations for all findings');
+      prompt.push('- Include comprehensive reasoning and justifications');
+      prompt.push('- Show step-by-step analysis process');
+    }
+    
     // Context level specific instructions
     switch (strategy.adaptive?.contextLevel) {
       case 'detailed':
@@ -358,6 +440,11 @@ export class IntegratedGeminiAdapter extends GeminiAdapter {
     // Add flags
     if (_context.flags) {
       Object.entries(_context.flags).forEach(([flag, value]) => {
+        // Skip SuperClaude-specific flags that Gemini doesn't understand
+        if (SUPERCLAUDE_ONLY_FLAGS.includes(flag)) {
+          this.logger.debug(`Filtering SuperClaude-specific flag: --${flag}`);
+          return;
+        }
         if (value === true) {
           geminiCmd += ` --${flag}`;
         } else if (value !== false) {

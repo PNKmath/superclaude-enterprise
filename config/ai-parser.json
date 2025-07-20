@@ -1,0 +1,16 @@
+{
+  "ai": {
+    "enabled": true,
+    "provider": "gemini",
+    "apiKey": "${GEMINI_API_KEY}",
+    "maxTokens": 1000
+  },
+  "fallback": {
+    "useRuleBasedOnly": false,
+    "timeout": 3000
+  },
+  "cache": {
+    "enabled": true,
+    "ttl": 3600
+  }
+}

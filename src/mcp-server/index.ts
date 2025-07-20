@@ -18,6 +18,9 @@ import { HealthCheck } from './health.js';
 import { SessionManager } from '../integrations/session/SessionManager.js';
 import { ExtensionManager } from '../extensions/core/ExtensionManager.js';
 import { createLogger } from '../utils/logger.js';
+import { AIParserConfig } from '../ai/ai-command-parser.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 // Create logger that writes to stderr for MCP compatibility
 const logger = createLogger('superclaude-enterprise', {
@@ -45,9 +48,45 @@ const ConflictResolutionToolSchema = z.object({
 });
 
 // Initialize components
-const claudeCodeBridge = new ClaudeCodeBridge();
+let claudeCodeBridge: ClaudeCodeBridge;
 const healthCheck = new HealthCheck();
 const sessionManager = SessionManager.getInstance();
+
+// Load AI parser config if available
+async function loadAIConfig(): Promise<AIParserConfig | null> {
+  try {
+    const configPath = path.join(process.cwd(), 'config', 'ai-parser.json');
+    const configData = await fs.readFile(configPath, 'utf-8');
+    const config = JSON.parse(configData);
+    
+    // Replace environment variables
+    if (config.ai.apiKey === '${GEMINI_API_KEY}') {
+      config.ai.apiKey = process.env.GEMINI_API_KEY || '';
+    }
+    
+    if (!config.ai.apiKey) {
+      logger.info('Gemini API key not found, AI features disabled');
+      return null;
+    }
+    
+    return {
+      geminiApiKey: config.ai.apiKey,
+      enableAI: config.ai.enabled,
+      complexityThreshold: 0.0, // Always use AI
+      maxTokens: config.ai.maxTokens,
+      useCompression: false // Never use compression
+    };
+  } catch (error) {
+    logger.info('AI config not found or invalid, using rule-based parsing only');
+    return null;
+  }
+}
+
+// Initialize Claude Code Bridge with AI support
+async function initializeClaudeCodeBridge() {
+  const aiConfig = await loadAIConfig();
+  claudeCodeBridge = new ClaudeCodeBridge(true, aiConfig || undefined);
+}
 
 // Initialize ExtensionManager for SuperClaude integration
 let extensionManager: ExtensionManager | null = null;
@@ -395,6 +434,9 @@ if (!process.listenerCount('unhandledRejection')) {
 
 // Start the server
 async function main() {
+  // Initialize Claude Code Bridge with AI support
+  await initializeClaudeCodeBridge();
+  
   // Initialize ExtensionManager before starting server
   await initializeExtensionManager();
   

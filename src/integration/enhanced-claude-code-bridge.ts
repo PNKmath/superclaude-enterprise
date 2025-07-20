@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import { EnhancedCommandParser } from '../utils/enhanced-command-parser.js';
 import { normalizePersonaNames } from '../utils/persona-mapping.js';
 import { SessionManager } from '../integrations/session/SessionManager.js';
+import { AICommandParser, AIParserConfig } from '../ai/ai-command-parser.js';
 
 // Maintain backward compatibility with existing interfaces
 export interface ClaudeCodeCommand {
@@ -26,7 +27,7 @@ export interface ConversionResult {
   error?: string;
   // Enhanced properties
   context?: {
-    flags: Map<string, string | boolean>;
+    flags: Map<string, string | boolean | number>;
     target?: string;
     targets?: string[];
     naturalContext: string;
@@ -42,14 +43,26 @@ export interface ConversionResult {
 
 export class EnhancedClaudeCodeBridge extends EventEmitter {
   private parser: EnhancedCommandParser;
+  private aiParser: AICommandParser | null = null;
   private sessionManager: SessionManager;
   private enableEnhancedMode: boolean;
+  private useAI: boolean = false;
 
-  constructor(enableEnhanced: boolean = true) {
+  constructor(enableEnhanced: boolean = true, aiConfig?: AIParserConfig) {
     super();
     this.parser = new EnhancedCommandParser();
     this.sessionManager = SessionManager.getInstance();
     this.enableEnhancedMode = enableEnhanced;
+    
+    // Initialize AI parser if config provided
+    if (aiConfig && aiConfig.geminiApiKey) {
+      try {
+        this.aiParser = new AICommandParser(aiConfig);
+        this.useAI = aiConfig.enableAI ?? false;
+      } catch (error) {
+        console.error('Failed to initialize AI parser:', error);
+      }
+    }
   }
 
   /**
@@ -92,7 +105,40 @@ export class EnhancedClaudeCodeBridge extends EventEmitter {
     naturalInput: string,
     options?: any
   ): Promise<ConversionResult> {
-    // Parse with enhanced parser
+    // Use AI parser if available and enabled
+    if (this.useAI && this.aiParser) {
+      try {
+        const aiParsed = await this.aiParser.parse(naturalInput, {
+          sessionId: options?.sessionId,
+          previousContext: options?.previousContext
+        });
+        
+        // Convert AI parser result to ConversionResult format
+        const fullCommand = this.aiParser.buildFullCommand(aiParsed);
+        
+        return {
+          success: true,
+          originalInput: naturalInput,
+          convertedCommand: fullCommand,
+          suggestedPersonas: aiParsed.suggestedPersonas,
+          confidence: aiParsed.confidence,
+          context: {
+            flags: aiParsed.flags,
+            target: aiParsed.target,
+            targets: aiParsed.targets,
+            naturalContext: aiParsed.naturalContext,
+            detectedIntent: aiParsed.detectedIntent || '',
+            needsHybridMode: aiParsed.flags.has('hybrid-mode')
+          },
+          sessionInfo: options
+        };
+      } catch (aiError) {
+        console.error('AI parsing failed, falling back to rule-based:', aiError);
+        // Fall through to rule-based parsing
+      }
+    }
+    
+    // Parse with enhanced parser (fallback or when AI not available)
     const parsed = this.parser.parse(naturalInput);
     
     // Handle session context if provided
