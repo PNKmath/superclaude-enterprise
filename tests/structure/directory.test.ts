@@ -2,60 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { existsSync } from 'fs';
-
-// Types for our directory structure
-interface DirectoryStructure {
-  bootstrap: string[];
-  commands: {
-    analysis: string[];
-    development: string[];
-    quality: string[];
-    meta: string[];
-  };
-  flags: {
-    planning: string[];
-    compression: string[];
-    mcp: string[];
-    scope: string[];
-    personas: string[];
-    iteration: string[];
-  };
-  personas: string[];
-  modes: string[];
-  orchestrator: string[];
-  principles: string[];
-  rules: string[];
-  mcp: string[];
-}
-
-// Utility class we'll implement
-class DocumentStructureManager {
-  private baseDir: string;
-
-  constructor(baseDir: string) {
-    this.baseDir = baseDir;
-  }
-
-  async createStructure(): Promise<void> {
-    // This will be implemented to make tests pass
-    throw new Error('Not implemented');
-  }
-
-  async validateStructure(): Promise<boolean> {
-    // This will be implemented to make tests pass
-    throw new Error('Not implemented');
-  }
-
-  getDocumentPath(type: string, category?: string, name?: string): string {
-    // This will be implemented to make tests pass
-    throw new Error('Not implemented');
-  }
-
-  async getAllPaths(type: string): Promise<string[]> {
-    // This will be implemented to make tests pass
-    throw new Error('Not implemented');
-  }
-}
+import { DocumentStructureManager } from '../../src/utils/document-structure-manager';
 
 describe('Document Directory Structure', () => {
   const TEST_BASE_DIR = path.join(__dirname, '../../tmp/test-docs');
