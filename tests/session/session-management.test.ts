@@ -109,6 +109,7 @@ describe('Session Management', () => {
       await sessionManager.loadDocument('doc4', 1500);
 
       const loadedDocs = await sessionManager.getLoadedDocuments();
+      
       expect(loadedDocs).toContain('doc1');
       expect(loadedDocs).not.toContain('doc2');
       expect(loadedDocs).toContain('doc3');
@@ -249,8 +250,11 @@ describe('Session Management', () => {
 
       const relationships = await sessionManager.analyzeRelationships();
       
+      expect(relationships['analyze-cmd']).toBeDefined();
       expect(relationships['analyze-cmd']).toContain('--think');
-      expect(relationships['analyze-cmd']).toContain('--seq');
+      expect(relationships['--think']).toBeDefined();
+      expect(relationships['--think']).toContain('--seq');
+      expect(relationships['build-cmd']).toBeDefined();
       expect(relationships['build-cmd']).toContain('--validate');
     });
 
