@@ -1,0 +1,580 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Create Document Sharding Architecture",
+        "description": "Design and implement the comprehensive document separation strategy and directory structure for sharded documentation files",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Create a hierarchical directory structure to organize sharded documentation files with a clear separation strategy for all core documents. The structure should include:\n\n1. Root directory for all documentation\n2. Subdirectories for each documentation type (commands, flags, personas, etc.)\n3. Individual files for each documentation item based on specific sharding strategies\n\n## Document Separation Strategy\n\n### CLAUDE.md\n- Contains only minimal bootstrap information\n- Essential instructions for initial loading and operation\n- References to the registry/index for accessing sharded documents\n\n### Sharding Strategy for Core Documents\n\n1. **COMMANDS.md**\n   - Shard into individual command files\n   - Organize by command category/domain\n   - Each command in a separate markdown file\n\n2. **FLAGS.md**\n   - Shard into category-based flag files\n   - Group related flags in single files\n   - Cross-reference between dependent flags\n\n3. **PERSONAS.md**\n   - Shard into individual persona files\n   - Include persona-specific attributes and behaviors\n   - Store relationships between personas\n\n4. **MODES.md**\n   - Shard into individual mode files\n   - Include mode-specific configurations and behaviors\n   - Document transitions between modes\n\n5. **ORCHESTRATOR.md**\n   - Shard into functional components:\n     - Routing rules\n     - Decision patterns\n     - Decision trees\n     - Flow control logic\n\n6. **PRINCIPLES.md**\n   - Shard into category-based principle files\n   - Group related principles by domain/purpose\n\n7. **RULES.md**\n   - Shard into rule category files\n   - Organize by application domain and priority\n\n8. **MCP.md**\n   - Shard into server-specific documentation components\n   - Separate operational vs. configuration documentation\n\n## Bootstrap File Structure\n\nImplement a bootstrap file structure that enables lazy loading:\n\n```typescript\n// Example directory structure\n// /docs\n//   /bootstrap\n//     /index.md  (minimal bootstrap information from CLAUDE.md)\n//     /registry.json (master index of all document locations)\n//   /commands\n//     /system\n//       /help.md\n//       /version.md\n//     /user\n//       /create.md\n//   /flags\n//     /display\n//       /verbose.md\n//       /quiet.md\n//     /security\n//       /permissions.md\n//   /personas\n//     /developer.md\n//     /manager.md\n//   /modes\n//     /creative.md\n//     /precise.md\n//   /orchestrator\n//     /routing.md\n//     /decision_trees.md\n//   /principles\n//     /safety.md\n//     /helpfulness.md\n//   /rules\n//     /content_policy.md\n//     /operational.md\n//   /mcp\n//     /server_config.md\n//     /api_endpoints.md\n\n// Example registry.json\ninterface DocumentRegistry {\n  commands: {\n    system: string[];\n    user: string[];\n    // other categories\n  };\n  flags: {\n    display: string[];\n    security: string[];\n    // other categories\n  };\n  personas: string[];\n  modes: string[];\n  orchestrator: {\n    routing: string;\n    decision_trees: string;\n    // other components\n  };\n  principles: {\n    safety: string;\n    helpfulness: string;\n    // other categories\n  };\n  rules: {\n    content_policy: string;\n    operational: string;\n    // other categories\n  };\n  mcp: {\n    server_config: string;\n    api_endpoints: string;\n    // other components\n  };\n}\n```\n\n## 30-Minute Session Management\n\nImplement considerations for 30-minute session constraints:\n\n1. Prioritize loading of most frequently accessed documents\n2. Implement document eviction strategy when approaching context limits\n3. Track document usage patterns to optimize preloading\n4. Maintain minimal core bootstrap information across sessions\n5. Implement document chunking that aligns with typical session usage patterns\n\nImplement a naming convention for files that ensures easy lookup and management. Create a JSON-based registry/index file that maps between original documentation sections and their sharded locations.\n\n## Test-Driven Development Approach\n\nAll implementation will follow a strict TDD approach:\n\n1. Write tests FIRST before any implementation code\n2. Follow the Red-Green-Refactor cycle:\n   - Red: Write a failing test\n   - Green: Write minimal code to make the test pass\n   - Refactor: Improve the code while keeping tests passing\n\n3. Test files will be located in a parallel test directory structure:\n   ```\n   /tests\n     /bootstrap\n       /bootstrap.test.ts\n       /registry.test.ts\n     /commands\n       /commands-sharding.test.ts\n     /flags\n       /flags-sharding.test.ts\n     ...\n     /session\n       /session-management.test.ts\n   ```\n\n4. Jest will be used as the testing framework with the following configuration:\n   ```typescript\n   // jest.config.js\n   module.exports = {\n     preset: 'ts-jest',\n     testEnvironment: 'node',\n     collectCoverage: true,\n     coverageThreshold: {\n       global: {\n         branches: 80,\n         functions: 80,\n         lines: 80,\n         statements: 80\n       }\n     }\n   };\n   ```",
+        "testStrategy": "Implement a comprehensive test-driven development approach using Jest:\n\n1. Bootstrap Content Validation Tests:\n   - Verify CLAUDE.md contains less than 500 tokens\n   - Test that bootstrap content includes all required references\n   - Validate that minimal bootstrap information is sufficient for system initialization\n\n2. Directory Structure Tests:\n   - Test creation of all required directories\n   - Verify correct nesting and hierarchy\n   - Validate permissions and access patterns\n\n3. Registry Schema Validation Tests:\n   - Test JSON schema compliance\n   - Verify all document types are properly represented\n   - Validate cross-references between documents\n\n4. Document Sharding Tests (for each document type):\n   - Test correct splitting of each core document\n   - Verify content integrity after sharding\n   - Validate naming conventions and organization\n   - Test specific sharding rules for each document type\n\n5. Session Management Tests:\n   - Simulate 30-minute session constraints\n   - Test document loading priorities\n   - Verify eviction strategies under memory pressure\n   - Validate token counting accuracy\n   - Test document chunking alignment with usage patterns\n\nAll tests will be written BEFORE implementation following the Red-Green-Refactor cycle. Test coverage requirements: minimum 80% for all code. Run tests automatically in CI/CD pipeline to ensure continuous validation.\n\n## Git Commit Workflow\n\nEach subtask should follow this workflow:\n\n1. Write tests first (TDD Red phase)\n2. Run tests to confirm they fail\n3. Implement code to pass tests (TDD Green phase)\n4. Run tests to confirm they pass\n5. Refactor if needed (TDD Refactor phase)\n6. Run tests again\n7. Git commit with conventional commits format\n\nExample commits for this task:\n- \"test: add bootstrap content validation tests\"\n- \"feat: implement minimal CLAUDE.md bootstrap structure\"\n- \"test: add directory structure creation tests\"\n- \"feat: implement directory structure for sharded docs\"\n- \"test: add registry schema validation tests\"\n- \"feat: implement document registry system\"",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define bootstrap content for CLAUDE.md",
+            "description": "Identify and document the minimal essential content that should remain in CLAUDE.md to bootstrap the system",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Follow the TDD approach to define the bootstrap content:\n1. Write tests that verify CLAUDE.md contains less than 500 tokens\n2. Identify the minimal essential content needed for bootstrapping\n3. Document the structure and required elements\n4. Implement the bootstrap content according to test specifications\n5. Commit changes using conventional commit format",
+            "testStrategy": "Create tests that verify:\n- Token count is under 500\n- All essential bootstrap elements are present\n- No non-essential content is included\n- Bootstrap references to registry are correct"
+          },
+          {
+            "id": 2,
+            "title": "Create sharding specification for each core document",
+            "description": "Define detailed sharding rules for each of the 8 core documents, including granularity, naming conventions, and cross-references",
+            "status": "pending",
+            "dependencies": [],
+            "details": "For each core document:\n1. Write tests that verify sharding specifications\n2. Define granularity of sharding (per command, per category, etc.)\n3. Establish naming conventions for sharded files\n4. Document cross-reference mechanisms between shards\n5. Implement specifications according to test requirements\n6. Commit changes using conventional commit format",
+            "testStrategy": "Create tests that verify:\n- Each document has clear sharding rules\n- Naming conventions are consistent\n- Cross-references are properly defined\n- Granularity is appropriate for each document type"
+          },
+          {
+            "id": 3,
+            "title": "Design registry/index structure",
+            "description": "Create the schema for the registry.json file that will map between original documentation sections and their sharded locations",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Follow TDD approach to design the registry structure:\n1. Write tests for registry schema validation\n2. Define the JSON schema for the registry\n3. Create mapping between original docs and sharded locations\n4. Implement lookup mechanisms for efficient document retrieval\n5. Commit changes using conventional commit format",
+            "testStrategy": "Create tests that verify:\n- Registry schema is valid JSON\n- All document types are represented\n- Paths to sharded documents are correct\n- Lookup operations work efficiently"
+          },
+          {
+            "id": 4,
+            "title": "Implement directory structure creation",
+            "description": "Create the hierarchical directory structure according to the sharding specification",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Follow TDD approach to implement directory structure:\n1. Write tests for directory structure creation\n2. Implement code to create the hierarchical directory structure\n3. Ensure proper nesting and organization\n4. Set appropriate permissions and access patterns\n5. Commit changes using conventional commit format",
+            "testStrategy": "Create tests that verify:\n- All required directories are created\n- Hierarchy matches specifications\n- Permissions are set correctly\n- Structure supports the sharding strategy"
+          },
+          {
+            "id": 5,
+            "title": "Develop session management strategy",
+            "description": "Design how sharded documents will be managed within 30-minute session constraints, including loading priorities and eviction policies",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Follow TDD approach to develop session management:\n1. Write tests for session management functionality\n2. Implement document loading prioritization\n3. Create eviction policies for context management\n4. Develop usage tracking for optimization\n5. Implement chunking aligned with session patterns\n6. Commit changes using conventional commit format",
+            "testStrategy": "Create tests that verify:\n- Documents load according to priority\n- Eviction works under memory pressure\n- Session constraints are respected\n- Usage patterns are tracked correctly"
+          },
+          {
+            "id": 6,
+            "title": "Create document dependency graph",
+            "description": "Map relationships between sharded documents to optimize loading related content",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Follow TDD approach to create dependency graph:\n1. Write tests for document relationship mapping\n2. Identify dependencies between sharded documents\n3. Create graph representation of relationships\n4. Implement traversal algorithms for related content\n5. Optimize for efficient loading patterns\n6. Commit changes using conventional commit format",
+            "testStrategy": "Create tests that verify:\n- Dependencies are correctly identified\n- Graph structure is accurate\n- Traversal algorithms work correctly\n- Related content is efficiently loaded"
+          },
+          {
+            "id": 7,
+            "title": "Write bootstrap content validation tests",
+            "description": "Create tests to verify CLAUDE.md contains less than 500 tokens and contains all required bootstrap information",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create Jest tests that validate:\n- Token count of CLAUDE.md is under 500 tokens\n- All required bootstrap references are present\n- Content is sufficient for system initialization\n- No non-essential information is included",
+            "testStrategy": "Use Jest to create unit tests in /tests/bootstrap/bootstrap.test.ts that count tokens and validate content structure. Follow the git commit workflow:\n1. Write the tests (TDD Red phase)\n2. Run tests to confirm they fail\n3. Commit with message \"test: add bootstrap content validation tests\""
+          },
+          {
+            "id": 8,
+            "title": "Write directory structure tests",
+            "description": "Create tests to verify the creation and validation of the hierarchical directory structure",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create Jest tests that validate:\n- All required directories are created\n- Directory hierarchy matches specification\n- Permissions are set correctly\n- Path resolution works as expected",
+            "testStrategy": "Use Jest with fs mocking to test directory creation in /tests/structure/directory.test.ts. Follow the git commit workflow:\n1. Write the tests (TDD Red phase)\n2. Run tests to confirm they fail\n3. Commit with message \"test: add directory structure creation tests\""
+          },
+          {
+            "id": 9,
+            "title": "Write registry schema validation tests",
+            "description": "Create tests to verify the registry.json schema and content mapping",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create Jest tests that validate:\n- Registry JSON schema compliance\n- All document types are properly represented\n- Path references are valid\n- Cross-references between documents work",
+            "testStrategy": "Use Jest with JSON schema validation in /tests/bootstrap/registry.test.ts. Follow the git commit workflow:\n1. Write the tests (TDD Red phase)\n2. Run tests to confirm they fail\n3. Commit with message \"test: add registry schema validation tests\""
+          },
+          {
+            "id": 10,
+            "title": "Write document sharding tests",
+            "description": "Create tests for each document type to verify correct sharding implementation",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create Jest tests for each document type that validate:\n- Documents are correctly split according to rules\n- Content integrity is maintained after sharding\n- Naming conventions are followed\n- Organization matches specification",
+            "testStrategy": "Create separate test files for each document type in /tests/{document-type}/{document-type}-sharding.test.ts. Follow the git commit workflow:\n1. Write the tests (TDD Red phase)\n2. Run tests to confirm they fail\n3. Commit with message \"test: add document sharding tests for [document-type]\""
+          },
+          {
+            "id": 11,
+            "title": "Write session management tests",
+            "description": "Create tests to verify document loading and eviction within 30-minute session constraints",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create Jest tests that validate:\n- Documents load according to priority rules\n- Eviction strategy works under memory pressure\n- Token counting is accurate\n- Document chunking aligns with usage patterns\n- Session constraints are respected",
+            "testStrategy": "Use Jest with timing and memory mocks in /tests/session/session-management.test.ts. Follow the git commit workflow:\n1. Write the tests (TDD Red phase)\n2. Run tests to confirm they fail\n3. Commit with message \"test: add session management tests\""
+          },
+          {
+            "id": 12,
+            "title": "Set up Jest testing framework",
+            "description": "Configure Jest with TypeScript support and coverage reporting",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Set up Jest with:\n- TypeScript configuration\n- Coverage reporting\n- Minimum 80% coverage requirements\n- Mocking utilities for fs, timing, and memory\n- Test helpers for common operations",
+            "testStrategy": "Create jest.config.js with appropriate settings and test helper utilities. Follow the git commit workflow:\n1. Create initial configuration\n2. Test the setup with a simple test\n3. Commit with message \"chore: set up Jest testing framework\""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Document Sharding Tool",
+        "description": "Create a utility to split existing monolithic documentation files into smaller, task-specific chunks",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "high",
+        "details": "Develop a Node.js script that:\n\n1. Reads the existing 8 core documentation files (COMMANDS.md, FLAGS.md, PERSONAS.md, etc.)\n2. Parses the content to identify logical separation points\n3. Splits each file into smaller chunks based on commands, flags, or other logical units\n4. Writes these chunks to the sharded directory structure\n5. Updates the registry with the new file locations\n\nSpecific sharding logic for each core document:\n\n1. COMMANDS.md (159 lines) → Split into 16 individual command files\n2. FLAGS.md (220 lines) → Split by category (planning, compression, MCP, scope, etc.)\n3. PERSONAS.md (467 lines) → Split into 11 individual persona files\n4. MODES.md (309 lines) → Split into 3 mode files (Task Management, Introspection, Token Efficiency)\n5. ORCHESTRATOR.md (533 lines) → Split by function (detection, routing, quality gates, performance)\n6. PRINCIPLES.md (160 lines) → Split by principle category\n7. RULES.md (65 lines) → Keep as single file due to small size, or split into operational/security\n8. MCP.md (225 lines) → Split by MCP server (Context7, Sequential, Magic, Playwright)\n\n```typescript\ninterface ShardingOptions {\n  inputDir: string;\n  outputDir: string;\n  registryPath: string;\n}\n\nasync function shardDocuments(options: ShardingOptions): Promise<void> {\n  // Read all documentation files\n  const files = await fs.readdir(options.inputDir);\n  \n  // Process each file\n  for (const file of files) {\n    const content = await fs.readFile(path.join(options.inputDir, file), 'utf8');\n    const chunks = parseDocumentIntoChunks(content, file);\n    \n    // Write chunks to appropriate locations\n    for (const chunk of chunks) {\n      await writeChunkToFile(chunk, options.outputDir);\n      updateRegistry(chunk, options.registryPath);\n    }\n  }\n}\n\nfunction parseDocumentIntoChunks(content: string, fileType: string): DocumentChunk[] {\n  // Implement parsing logic based on file type and markdown headers\n  // Return array of document chunks with metadata\n  switch(fileType) {\n    case 'COMMANDS.md':\n      return parseCommandsDocument(content); // Split into 16 command files\n    case 'FLAGS.md':\n      return parseFlagsDocument(content);    // Split by category\n    case 'PERSONAS.md':\n      return parsePersonasDocument(content); // Split into 11 persona files\n    case 'MODES.md':\n      return parseModesDocument(content);    // Split into 3 mode files\n    case 'ORCHESTRATOR.md':\n      return parseOrchestratorDocument(content); // Split by function\n    case 'PRINCIPLES.md':\n      return parsePrinciplesDocument(content); // Split by principle category\n    case 'RULES.md':\n      return parseRulesDocument(content);    // Keep as single file or split into operational/security\n    case 'MCP.md':\n      return parseMCPDocument(content);      // Split by MCP server\n    default:\n      return [{ id: fileType, content, metadata: {} }];\n  }\n}\n```",
+        "testStrategy": "Test with sample documentation files to ensure correct splitting. Verify that all content from original files is preserved in the sharded structure. Test edge cases like empty files, malformed markdown, etc.\n\nSpecific test cases:\n1. Verify COMMANDS.md splits into exactly 16 command files with proper context\n2. Confirm FLAGS.md splits correctly by categories (planning, compression, etc.)\n3. Ensure PERSONAS.md creates 11 distinct persona files\n4. Check MODES.md splits into the 3 specified mode files\n5. Validate ORCHESTRATOR.md splits by function areas\n6. Test PRINCIPLES.md splits by principle category\n7. Verify RULES.md handling (single or split)\n8. Confirm MCP.md splits by the 4 server types\n9. Test intelligent parsing of markdown headers across all files",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement base document parsing framework",
+            "description": "Create the core functionality to read, parse and write markdown files",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement COMMANDS.md parser",
+            "description": "Create parser to split COMMANDS.md into 16 individual command files based on markdown headers",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement FLAGS.md parser",
+            "description": "Create parser to split FLAGS.md by category (planning, compression, MCP, scope, etc.)",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement PERSONAS.md parser",
+            "description": "Create parser to split PERSONAS.md into 11 individual persona files",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement MODES.md parser",
+            "description": "Create parser to split MODES.md into 3 mode files (Task Management, Introspection, Token Efficiency)",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement ORCHESTRATOR.md parser",
+            "description": "Create parser to split ORCHESTRATOR.md by function (detection, routing, quality gates, performance)",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement PRINCIPLES.md parser",
+            "description": "Create parser to split PRINCIPLES.md by principle category",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement RULES.md parser",
+            "description": "Create parser to handle RULES.md (either keep as single file or split into operational/security)",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement MCP.md parser",
+            "description": "Create parser to split MCP.md by MCP server (Context7, Sequential, Magic, Playwright)",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement registry update mechanism",
+            "description": "Create functionality to update the registry with new file locations after sharding",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Create comprehensive test suite",
+            "description": "Develop tests for each document type to verify correct sharding behavior",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Create LazyDocumentLoader Class",
+        "description": "Implement the core lazy loading engine that loads documentation only when needed",
+        "status": "pending",
+        "dependencies": [
+          1
+        ],
+        "priority": "high",
+        "details": "Develop a TypeScript class that handles lazy loading of documentation chunks using a Test-Driven Development approach:\n\n1. Create a singleton LazyDocumentLoader class\n2. Implement methods to load specific documentation chunks by ID or category\n3. Add support for loading multiple related chunks\n4. Implement token counting to track context usage\n\n```typescript\nclass LazyDocumentLoader {\n  private static instance: LazyDocumentLoader;\n  private registry: DocumentRegistry;\n  private loadedDocuments: Map<string, string>;\n  private tokenCount: number;\n  \n  private constructor() {\n    this.loadedDocuments = new Map();\n    this.tokenCount = 0;\n  }\n  \n  public static getInstance(): LazyDocumentLoader {\n    if (!LazyDocumentLoader.instance) {\n      LazyDocumentLoader.instance = new LazyDocumentLoader();\n    }\n    return LazyDocumentLoader.instance;\n  }\n  \n  public async initialize(): Promise<void> {\n    // Load only the registry, not the actual documents\n    this.registry = await this.loadRegistry();\n  }\n  \n  public async loadDocument(id: string): Promise<string> {\n    if (this.loadedDocuments.has(id)) {\n      return this.loadedDocuments.get(id)!;\n    }\n    \n    const path = this.getDocumentPath(id);\n    const content = await fs.readFile(path, 'utf8');\n    \n    this.loadedDocuments.set(id, content);\n    this.tokenCount += this.countTokens(content);\n    \n    return content;\n  }\n  \n  public getLoadedTokenCount(): number {\n    return this.tokenCount;\n  }\n  \n  private countTokens(text: string): number {\n    // Implement token counting logic\n    // This is a simplified version\n    return text.split(/\\s+/).length;\n  }\n  \n  private getDocumentPath(id: string): string {\n    // Use registry to find the document path\n  }\n  \n  private async loadRegistry(): Promise<DocumentRegistry> {\n    // Load the registry file\n  }\n}\n```",
+        "testStrategy": "Implement a Test-Driven Development approach for the LazyDocumentLoader class:\n\n1. Write tests first following the TDD cycle (Red-Green-Refactor)\n2. Create test file at /tests/loaders/lazy-document-loader.test.ts\n3. Implement specific test cases:\n   - Load single document on demand\n   - Prevent duplicate loading\n   - Handle missing documents gracefully\n   - Track token usage per document\n   - Cache hit/miss ratio\n   - Performance benchmarks (< 100ms load time)\n   - Memory usage limits\n\n4. Implement mock strategies for file system and network calls\n5. Add integration tests with sharded documents\n\nUnit test with mock documentation files to verify documents are loaded only once and cached properly. Test token counting accuracy. Ensure thread safety for concurrent access.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create test file structure",
+            "description": "Set up the test file at /tests/loaders/lazy-document-loader.test.ts with initial test cases following TDD approach",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement document loading tests",
+            "description": "Write tests for loading single documents on demand and preventing duplicate loading",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement error handling tests",
+            "description": "Write tests for gracefully handling missing or invalid documents",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement token tracking tests",
+            "description": "Write tests for tracking token usage per document and overall",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement performance tests",
+            "description": "Write tests for performance benchmarks (< 100ms load time) and cache hit/miss ratio",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement memory usage tests",
+            "description": "Write tests for memory usage limits and optimization",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Create mock strategies",
+            "description": "Implement mock strategies for file system and network calls in tests",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement LazyDocumentLoader class",
+            "description": "Develop the LazyDocumentLoader class based on the test requirements",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Add integration tests",
+            "description": "Create integration tests with actual sharded documents",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Request Analyzer",
+        "description": "Create a system to analyze user requests and determine which documentation chunks need to be loaded",
+        "details": "Develop a request analyzer that examines user input to identify required documentation:\n\n1. Create pattern matching for command identification\n2. Implement keyword extraction for relevant documentation\n3. Build a scoring system to prioritize documentation relevance\n4. Add predictive loading for commonly associated documentation\n\n```typescript\ninterface AnalysisResult {\n  requiredDocuments: string[];\n  confidence: number;\n  predictiveDocuments?: string[];\n}\n\nclass RequestAnalyzer {\n  private commandPatterns: Map<string, RegExp>;\n  private keywordMap: Map<string, string[]>;\n  \n  constructor() {\n    this.initializePatterns();\n    this.initializeKeywordMap();\n  }\n  \n  public analyze(userRequest: string): AnalysisResult {\n    const requiredDocs = new Set<string>();\n    let confidence = 0;\n    \n    // Check for command patterns\n    for (const [docId, pattern] of this.commandPatterns.entries()) {\n      if (pattern.test(userRequest)) {\n        requiredDocs.add(docId);\n        confidence = Math.max(confidence, 0.9); // High confidence for pattern match\n      }\n    }\n    \n    // Check for keywords\n    const keywords = this.extractKeywords(userRequest);\n    for (const keyword of keywords) {\n      const docs = this.keywordMap.get(keyword) || [];\n      docs.forEach(doc => requiredDocs.add(doc));\n      if (docs.length > 0) {\n        confidence = Math.max(confidence, 0.7); // Medium confidence for keyword match\n      }\n    }\n    \n    // Add predictive documents\n    const predictiveDocs = this.getPredictiveDocuments(Array.from(requiredDocs));\n    \n    return {\n      requiredDocuments: Array.from(requiredDocs),\n      confidence,\n      predictiveDocuments: predictiveDocs\n    };\n  }\n  \n  private extractKeywords(text: string): string[] {\n    // Implement keyword extraction\n    // This could use NLP techniques or simple word matching\n  }\n  \n  private getPredictiveDocuments(docs: string[]): string[] {\n    // Return commonly associated documents based on usage patterns\n  }\n  \n  private initializePatterns(): void {\n    // Set up regex patterns for command identification\n  }\n  \n  private initializeKeywordMap(): void {\n    // Map keywords to relevant documentation IDs\n  }\n}\n```",
+        "testStrategy": "Test with various user request samples to verify correct document identification. Measure accuracy of the analyzer against known command-document mappings. Test with ambiguous requests to ensure reasonable predictions.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Develop Session-Based Caching System",
+        "description": "Create a caching mechanism to store loaded documents within a session to avoid repeated loading",
+        "details": "Implement a session-based caching system that:\n\n1. Maintains loaded documents for the duration of a user session\n2. Implements LRU (Least Recently Used) eviction policy\n3. Tracks token usage and can evict documents when approaching context limits\n4. Provides statistics on cache hits/misses\n\n```typescript\ninterface CacheStats {\n  hits: number;\n  misses: number;\n  evictions: number;\n  currentSize: number;\n  maxSize: number;\n}\n\nclass DocumentCache {\n  private cache: Map<string, { content: string; lastAccessed: number; tokens: number }>;  \n  private maxTokens: number;\n  private currentTokens: number;\n  private stats: CacheStats;\n  \n  constructor(maxTokens: number = 10000) {\n    this.cache = new Map();\n    this.maxTokens = maxTokens;\n    this.currentTokens = 0;\n    this.stats = { hits: 0, misses: 0, evictions: 0, currentSize: 0, maxSize: maxTokens };\n  }\n  \n  public get(id: string): string | null {\n    const item = this.cache.get(id);\n    if (!item) {\n      this.stats.misses++;\n      return null;\n    }\n    \n    // Update last accessed time\n    item.lastAccessed = Date.now();\n    this.stats.hits++;\n    return item.content;\n  }\n  \n  public set(id: string, content: string, tokens: number): void {\n    // Check if we need to evict items\n    while (this.currentTokens + tokens > this.maxTokens && this.cache.size > 0) {\n      this.evictLRU();\n    }\n    \n    this.cache.set(id, {\n      content,\n      lastAccessed: Date.now(),\n      tokens\n    });\n    \n    this.currentTokens += tokens;\n    this.stats.currentSize = this.currentTokens;\n  }\n  \n  public getStats(): CacheStats {\n    return { ...this.stats };\n  }\n  \n  private evictLRU(): void {\n    let oldest: [string, { content: string; lastAccessed: number; tokens: number }] | null = null;\n    \n    for (const entry of this.cache.entries()) {\n      if (!oldest || entry[1].lastAccessed < oldest[1].lastAccessed) {\n        oldest = entry;\n      }\n    }\n    \n    if (oldest) {\n      this.cache.delete(oldest[0]);\n      this.currentTokens -= oldest[1].tokens;\n      this.stats.evictions++;\n    }\n  }\n}\n```",
+        "testStrategy": "Test cache operations with various document sizes. Verify LRU eviction works correctly under memory pressure. Measure cache performance with different access patterns. Test concurrent access scenarios.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Implement Progressive Disclosure Mechanism",
+        "description": "Create a system that progressively loads more detailed documentation based on the complexity of user requests",
+        "details": "Develop a progressive disclosure system that:\n\n1. Initially loads only high-level documentation summaries\n2. Progressively loads more detailed documentation as needed\n3. Implements a multi-tier approach to documentation detail levels\n4. Tracks user interaction patterns to predict needed detail levels\n\n```typescript\nenum DetailLevel {\n  SUMMARY,\n  STANDARD,\n  DETAILED,\n  COMPLETE\n}\n\nclass ProgressiveDisclosure {\n  private currentDetailLevel: Map<string, DetailLevel>;\n  private loader: LazyDocumentLoader;\n  private analyzer: RequestAnalyzer;\n  \n  constructor(loader: LazyDocumentLoader, analyzer: RequestAnalyzer) {\n    this.currentDetailLevel = new Map();\n    this.loader = loader;\n    this.analyzer = analyzer;\n  }\n  \n  public async getDocumentForRequest(request: string, category: string): Promise<string> {\n    // Analyze the request complexity\n    const complexity = this.analyzeComplexity(request);\n    \n    // Determine required detail level\n    const requiredLevel = this.mapComplexityToDetailLevel(complexity);\n    \n    // Get current detail level for this category\n    const currentLevel = this.currentDetailLevel.get(category) || DetailLevel.SUMMARY;\n    \n    // If we need more detail, load it\n    if (requiredLevel > currentLevel) {\n      await this.loadDetailLevel(category, requiredLevel);\n      this.currentDetailLevel.set(category, requiredLevel);\n    }\n    \n    // Return the appropriate document\n    return this.loader.getDocumentAtLevel(category, requiredLevel);\n  }\n  \n  private analyzeComplexity(request: string): number {\n    // Analyze request complexity on a scale of 0-1\n    // Consider factors like:\n    // - Number of parameters\n    // - Presence of advanced concepts\n    // - Request length\n    // - Specific keywords indicating complexity\n  }\n  \n  private mapComplexityToDetailLevel(complexity: number): DetailLevel {\n    if (complexity < 0.25) return DetailLevel.SUMMARY;\n    if (complexity < 0.5) return DetailLevel.STANDARD;\n    if (complexity < 0.75) return DetailLevel.DETAILED;\n    return DetailLevel.COMPLETE;\n  }\n  \n  private async loadDetailLevel(category: string, level: DetailLevel): Promise<void> {\n    // Load all documentation up to and including the specified level\n    for (let i = DetailLevel.SUMMARY; i <= level; i++) {\n      await this.loader.loadDocumentLevel(category, i);\n    }\n  }\n}\n```",
+        "testStrategy": "Test with requests of varying complexity to verify appropriate detail levels are loaded. Measure token efficiency compared to loading all documentation. Test the accuracy of complexity analysis with diverse request samples.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Update Context-Preserving-Bridge",
+        "description": "Modify the existing context-preserving-bridge.ts to integrate with the lazy loading architecture",
+        "details": "Update the context-preserving-bridge.ts file to work with the new lazy loading system:\n\n1. Replace direct documentation loading with LazyDocumentLoader calls\n2. Integrate with RequestAnalyzer to determine required documentation\n3. Modify context management to track loaded documentation\n4. Ensure backward compatibility with existing bridge interfaces\n\n```typescript\n// Original import\n// import { loadAllDocumentation } from './documentation-loader';\n\n// New imports\nimport { LazyDocumentLoader } from './lazy-document-loader';\nimport { RequestAnalyzer } from './request-analyzer';\nimport { ProgressiveDisclosure } from './progressive-disclosure';\n\nclass ContextPreservingBridge {\n  private loader: LazyDocumentLoader;\n  private analyzer: RequestAnalyzer;\n  private disclosure: ProgressiveDisclosure;\n  \n  constructor() {\n    this.loader = LazyDocumentLoader.getInstance();\n    this.analyzer = new RequestAnalyzer();\n    this.disclosure = new ProgressiveDisclosure(this.loader, this.analyzer);\n  }\n  \n  public async initialize(): Promise<void> {\n    // Instead of loading all documentation\n    // await loadAllDocumentation();\n    \n    // Just initialize the loader with minimal context\n    await this.loader.initialize();\n  }\n  \n  public async processRequest(request: string): Promise<string> {\n    // Analyze the request to determine required documentation\n    const analysis = this.analyzer.analyze(request);\n    \n    // Load required documentation\n    for (const docId of analysis.requiredDocuments) {\n      await this.loader.loadDocument(docId);\n    }\n    \n    // If confidence is low, use progressive disclosure\n    if (analysis.confidence < 0.5) {\n      const category = this.getCategoryFromRequest(request);\n      await this.disclosure.getDocumentForRequest(request, category);\n    }\n    \n    // Process the request with the loaded documentation\n    return this.executeRequest(request);\n  }\n  \n  private getCategoryFromRequest(request: string): string {\n    // Extract category from request\n  }\n  \n  private async executeRequest(request: string): Promise<string> {\n    // Execute the request using loaded documentation\n  }\n}\n```",
+        "testStrategy": "Test with existing SuperClaude commands to ensure backward compatibility. Verify that the bridge correctly loads required documentation. Measure token usage compared to the original implementation. Test error handling for missing documentation.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Update Enhanced-Claude-Code-Bridge",
+        "description": "Modify the enhanced-claude-code-bridge.ts to work with the lazy loading architecture",
+        "details": "Update the enhanced-claude-code-bridge.ts to integrate with lazy loading:\n\n1. Replace bulk documentation loading with targeted loading\n2. Add request preprocessing to identify required documentation\n3. Implement context management for code-specific operations\n4. Ensure compatibility with existing code execution patterns\n\n```typescript\n// Original imports\n// import { loadAllCodeDocumentation } from './code-documentation-loader';\n\n// New imports\nimport { LazyDocumentLoader } from './lazy-document-loader';\nimport { RequestAnalyzer } from './request-analyzer';\nimport { CodeContextManager } from './code-context-manager';\n\nclass EnhancedClaudeCodeBridge {\n  private loader: LazyDocumentLoader;\n  private analyzer: RequestAnalyzer;\n  private contextManager: CodeContextManager;\n  \n  constructor() {\n    this.loader = LazyDocumentLoader.getInstance();\n    this.analyzer = new RequestAnalyzer();\n    this.contextManager = new CodeContextManager(this.loader);\n  }\n  \n  public async initialize(): Promise<void> {\n    // Instead of loading all code documentation\n    // await loadAllCodeDocumentation();\n    \n    // Just initialize with minimal context\n    await this.loader.initialize();\n    \n    // Preload only essential code-related documentation\n    await this.loader.loadDocument('code/essentials');\n  }\n  \n  public async processCodeRequest(request: string, codeContext?: string): Promise<string> {\n    // Analyze the code request\n    const analysis = this.analyzer.analyzeCodeRequest(request, codeContext);\n    \n    // Load required documentation\n    for (const docId of analysis.requiredDocuments) {\n      await this.loader.loadDocument(docId);\n    }\n    \n    // Update code context\n    if (codeContext) {\n      this.contextManager.updateContext(codeContext);\n    }\n    \n    // Execute the code request\n    return this.executeCodeRequest(request);\n  }\n  \n  private async executeCodeRequest(request: string): Promise<string> {\n    // Execute the code request using loaded documentation\n  }\n}\n\nclass CodeContextManager {\n  private loader: LazyDocumentLoader;\n  private currentContext: string;\n  private languageDetector: LanguageDetector;\n  \n  constructor(loader: LazyDocumentLoader) {\n    this.loader = loader;\n    this.currentContext = '';\n    this.languageDetector = new LanguageDetector();\n  }\n  \n  public async updateContext(context: string): Promise<void> {\n    this.currentContext = context;\n    \n    // Detect programming language\n    const language = this.languageDetector.detect(context);\n    \n    // Load language-specific documentation\n    await this.loader.loadDocument(`code/languages/${language}`);\n  }\n}\n\nclass LanguageDetector {\n  public detect(code: string): string {\n    // Detect programming language from code\n    // Return language identifier (e.g., 'typescript', 'python')\n  }\n}\n```",
+        "testStrategy": "Test with various code execution scenarios to verify correct documentation loading. Test language detection accuracy with different code samples. Verify that code context is properly maintained across requests. Measure token efficiency for code operations.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Update MCP Server Integration",
+        "description": "Modify the MCP server to handle dynamic document loading and context management",
+        "details": "Update the MCP (Master Control Program) server to work with the lazy loading architecture:\n\n1. Modify server initialization to use minimal context loading\n2. Update request handling to use the lazy loading bridges\n3. Implement context tracking across sessions\n4. Add monitoring for token usage and context efficiency\n\n```typescript\nimport { ContextPreservingBridge } from './context-preserving-bridge';\nimport { EnhancedClaudeCodeBridge } from './enhanced-claude-code-bridge';\nimport { LazyDocumentLoader } from './lazy-document-loader';\n\nclass MCPServer {\n  private contextBridge: ContextPreservingBridge;\n  private codeBridge: EnhancedClaudeCodeBridge;\n  private loader: LazyDocumentLoader;\n  private sessions: Map<string, SessionContext>;\n  \n  constructor() {\n    this.loader = LazyDocumentLoader.getInstance();\n    this.contextBridge = new ContextPreservingBridge();\n    this.codeBridge = new EnhancedClaudeCodeBridge();\n    this.sessions = new Map();\n  }\n  \n  public async initialize(): Promise<void> {\n    // Initialize with minimal context\n    await this.loader.initialize();\n    await this.contextBridge.initialize();\n    await this.codeBridge.initialize();\n    \n    console.log(`Initial token usage: ${this.loader.getLoadedTokenCount()}`);\n  }\n  \n  public async handleRequest(sessionId: string, request: string): Promise<string> {\n    // Get or create session context\n    let session = this.sessions.get(sessionId);\n    if (!session) {\n      session = new SessionContext(sessionId);\n      this.sessions.set(sessionId, session);\n    }\n    \n    // Determine request type\n    if (this.isCodeRequest(request)) {\n      return this.codeBridge.processCodeRequest(request, session.getCodeContext());\n    } else {\n      return this.contextBridge.processRequest(request);\n    }\n  }\n  \n  public getTokenUsage(sessionId?: string): TokenUsageStats {\n    if (sessionId) {\n      const session = this.sessions.get(sessionId);\n      return session ? session.getTokenUsage() : { total: 0, byCategory: {} };\n    } else {\n      return {\n        total: this.loader.getLoadedTokenCount(),\n        byCategory: this.loader.getTokenCountByCategory()\n      };\n    }\n  }\n  \n  private isCodeRequest(request: string): boolean {\n    // Determine if this is a code-related request\n  }\n}\n\nclass SessionContext {\n  private id: string;\n  private codeContext: string;\n  private requestHistory: string[];\n  \n  constructor(id: string) {\n    this.id = id;\n    this.codeContext = '';\n    this.requestHistory = [];\n  }\n  \n  public getCodeContext(): string {\n    return this.codeContext;\n  }\n  \n  public setCodeContext(context: string): void {\n    this.codeContext = context;\n  }\n  \n  public addRequest(request: string): void {\n    this.requestHistory.push(request);\n  }\n  \n  public getTokenUsage(): TokenUsageStats {\n    // Calculate token usage for this session\n  }\n}\n\ninterface TokenUsageStats {\n  total: number;\n  byCategory: Record<string, number>;\n}\n```",
+        "testStrategy": "Test server initialization to verify minimal token usage. Test request handling with various request types to ensure correct bridge selection. Verify session management across multiple requests. Test token usage reporting for accuracy.",
+        "priority": "high",
+        "dependencies": [
+          7,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Implement Natural Language Parser Updates",
+        "description": "Update the natural language parser to work with sharded documents and lazy loading",
+        "details": "Modify the natural language parser to work with the new architecture:\n\n1. Update command recognition to work with sharded documentation\n2. Implement partial parsing for efficient document loading\n3. Add context-aware command resolution\n4. Ensure backward compatibility with existing command syntax\n\n```typescript\nclass NaturalLanguageParser {\n  private loader: LazyDocumentLoader;\n  private commandRegistry: Map<string, CommandDefinition>;\n  private flagRegistry: Map<string, FlagDefinition>;\n  \n  constructor(loader: LazyDocumentLoader) {\n    this.loader = loader;\n    this.commandRegistry = new Map();\n    this.flagRegistry = new Map();\n  }\n  \n  public async initialize(): Promise<void> {\n    // Load only command and flag metadata, not full documentation\n    await this.loadCommandMetadata();\n    await this.loadFlagMetadata();\n  }\n  \n  public async parseRequest(request: string): Promise<ParsedCommand> {\n    // Extract command name\n    const commandName = this.extractCommandName(request);\n    \n    // Load command documentation if needed\n    if (commandName && !this.isCommandFullyLoaded(commandName)) {\n      await this.loader.loadDocument(`commands/${commandName}`);\n      await this.updateCommandRegistry(commandName);\n    }\n    \n    // Extract flags\n    const flags = this.extractFlags(request);\n    \n    // Load flag documentation if needed\n    for (const flag of flags) {\n      if (!this.isFlagLoaded(flag)) {\n        await this.loader.loadDocument(`flags/${flag}`);\n        await this.updateFlagRegistry(flag);\n      }\n    }\n    \n    // Parse arguments\n    const args = this.parseArguments(request, commandName);\n    \n    return {\n      command: commandName,\n      flags,\n      arguments: args\n    };\n  }\n  \n  private extractCommandName(request: string): string | null {\n    // Extract command name from request\n  }\n  \n  private extractFlags(request: string): string[] {\n    // Extract flags from request\n  }\n  \n  private parseArguments(request: string, command: string | null): Record<string, any> {\n    // Parse command arguments\n  }\n  \n  private async loadCommandMetadata(): Promise<void> {\n    // Load command metadata (names, patterns, but not full documentation)\n    const metadata = await this.loader.loadDocument('metadata/commands');\n    // Parse metadata and populate commandRegistry\n  }\n  \n  private async loadFlagMetadata(): Promise<void> {\n    // Load flag metadata\n    const metadata = await this.loader.loadDocument('metadata/flags');\n    // Parse metadata and populate flagRegistry\n  }\n  \n  private isCommandFullyLoaded(command: string): boolean {\n    return this.commandRegistry.has(command) && \n           this.commandRegistry.get(command)!.isFullyLoaded;\n  }\n  \n  private isFlagLoaded(flag: string): boolean {\n    return this.flagRegistry.has(flag) && \n           this.flagRegistry.get(flag)!.isLoaded;\n  }\n  \n  private async updateCommandRegistry(command: string): Promise<void> {\n    // Update command registry with full documentation\n  }\n  \n  private async updateFlagRegistry(flag: string): Promise<void> {\n    // Update flag registry with full documentation\n  }\n}\n\ninterface CommandDefinition {\n  name: string;\n  pattern: RegExp;\n  description: string;\n  isFullyLoaded: boolean;\n  // Other command properties\n}\n\ninterface FlagDefinition {\n  name: string;\n  description: string;\n  isLoaded: boolean;\n  // Other flag properties\n}\n\ninterface ParsedCommand {\n  command: string | null;\n  flags: string[];\n  arguments: Record<string, any>;\n}\n```",
+        "testStrategy": "Test command recognition with various command formats. Verify that only necessary documentation is loaded for parsing. Test with complex commands that use multiple flags. Ensure backward compatibility with existing command syntax.",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Implement Comprehensive Testing Suite",
+        "description": "Create a testing suite to validate the lazy loading architecture and ensure backward compatibility",
+        "details": "Develop a comprehensive testing suite that:\n\n1. Tests all components of the lazy loading architecture\n2. Verifies backward compatibility with existing commands\n3. Measures token usage reduction\n4. Tests performance under various load conditions\n\n```typescript\nimport { LazyDocumentLoader } from './lazy-document-loader';\nimport { RequestAnalyzer } from './request-analyzer';\nimport { MCPServer } from './mcp-server';\n\nclass TestSuite {\n  private server: MCPServer;\n  private loader: LazyDocumentLoader;\n  \n  constructor() {\n    this.loader = LazyDocumentLoader.getInstance();\n    this.server = new MCPServer();\n  }\n  \n  public async runAllTests(): Promise<TestResults> {\n    const results: TestResults = {\n      componentTests: await this.runComponentTests(),\n      compatibilityTests: await this.runCompatibilityTests(),\n      tokenUsageTests: await this.runTokenUsageTests(),\n      performanceTests: await this.runPerformanceTests()\n    };\n    \n    return results;\n  }\n  \n  private async runComponentTests(): Promise<TestResult[]> {\n    const tests = [\n      this.testDocumentSharding(),\n      this.testLazyLoading(),\n      this.testRequestAnalysis(),\n      this.testCaching(),\n      this.testProgressiveDisclosure()\n    ];\n    \n    return Promise.all(tests);\n  }\n  \n  private async runCompatibilityTests(): Promise<TestResult[]> {\n    // Test all existing commands\n    const commands = await this.getExistingCommands();\n    const tests = commands.map(cmd => this.testCommand(cmd));\n    \n    return Promise.all(tests);\n  }\n  \n  private async runTokenUsageTests(): Promise<TokenUsageResult> {\n    // Measure token usage before and after\n    const beforeUsage = await this.measureOriginalTokenUsage();\n    const afterUsage = await this.measureNewTokenUsage();\n    \n    return {\n      originalTokens: beforeUsage,\n      newInitialTokens: afterUsage.initial,\n      newAverageTokens: afterUsage.average,\n      reduction: (beforeUsage - afterUsage.initial) / beforeUsage\n    };\n  }\n  \n  private async runPerformanceTests(): Promise<PerformanceResult[]> {\n    // Test performance under various conditions\n    const scenarios = this.getPerformanceScenarios();\n    const results = scenarios.map(scenario => this.testPerformance(scenario));\n    \n    return Promise.all(results);\n  }\n  \n  private async testDocumentSharding(): Promise<TestResult> {\n    // Test document sharding\n  }\n  \n  private async testLazyLoading(): Promise<TestResult> {\n    // Test lazy loading\n  }\n  \n  private async testRequestAnalysis(): Promise<TestResult> {\n    // Test request analysis\n  }\n  \n  private async testCaching(): Promise<TestResult> {\n    // Test caching\n  }\n  \n  private async testProgressiveDisclosure(): Promise<TestResult> {\n    // Test progressive disclosure\n  }\n  \n  private async testCommand(command: string): Promise<TestResult> {\n    // Test a specific command\n  }\n  \n  private async getExistingCommands(): Promise<string[]> {\n    // Get list of existing commands\n  }\n  \n  private async measureOriginalTokenUsage(): Promise<number> {\n    // Measure original token usage\n  }\n  \n  private async measureNewTokenUsage(): Promise<{ initial: number; average: number }> {\n    // Measure new token usage\n  }\n  \n  private getPerformanceScenarios(): PerformanceScenario[] {\n    // Define performance test scenarios\n  }\n  \n  private async testPerformance(scenario: PerformanceScenario): Promise<PerformanceResult> {\n    // Test performance for a scenario\n  }\n}\n\ninterface TestResult {\n  name: string;\n  passed: boolean;\n  message?: string;\n}\n\ninterface TestResults {\n  componentTests: TestResult[];\n  compatibilityTests: TestResult[];\n  tokenUsageTests: TokenUsageResult;\n  performanceTests: PerformanceResult[];\n}\n\ninterface TokenUsageResult {\n  originalTokens: number;\n  newInitialTokens: number;\n  newAverageTokens: number;\n  reduction: number;\n}\n\ninterface PerformanceScenario {\n  name: string;\n  requests: string[];\n  concurrency: number;\n}\n\ninterface PerformanceResult {\n  scenario: string;\n  averageResponseTime: number;\n  maxResponseTime: number;\n  requestsPerSecond: number;\n  tokenUsage: number;\n}\n```",
+        "testStrategy": "Run the test suite in various environments to ensure consistent results. Compare test results against success criteria. Document any regressions or issues found. Verify that token usage reduction meets the 95% target.",
+        "priority": "medium",
+        "dependencies": [
+          7,
+          8,
+          9,
+          10
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Implement Monitoring and Analytics",
+        "description": "Create a monitoring system to track token usage, loading patterns, and system performance",
+        "details": "Develop a monitoring and analytics system that:\n\n1. Tracks token usage across sessions\n2. Monitors document loading patterns\n3. Identifies optimization opportunities\n4. Provides real-time performance metrics\n\n```typescript\nclass MonitoringSystem {\n  private static instance: MonitoringSystem;\n  private metrics: MetricsStore;\n  private loader: LazyDocumentLoader;\n  \n  private constructor() {\n    this.metrics = new MetricsStore();\n    this.loader = LazyDocumentLoader.getInstance();\n    this.setupListeners();\n  }\n  \n  public static getInstance(): MonitoringSystem {\n    if (!MonitoringSystem.instance) {\n      MonitoringSystem.instance = new MonitoringSystem();\n    }\n    return MonitoringSystem.instance;\n  }\n  \n  public recordRequest(sessionId: string, request: string, loadedDocs: string[]): void {\n    this.metrics.recordRequest({\n      sessionId,\n      timestamp: Date.now(),\n      request,\n      loadedDocs,\n      tokenCount: this.loader.getLoadedTokenCount()\n    });\n  }\n  \n  public getTokenUsageReport(): TokenUsageReport {\n    return this.metrics.generateTokenUsageReport();\n  }\n  \n  public getLoadingPatternReport(): LoadingPatternReport {\n    return this.metrics.generateLoadingPatternReport();\n  }\n  \n  public getPerformanceReport(): PerformanceReport {\n    return this.metrics.generatePerformanceReport();\n  }\n  \n  public getOptimizationSuggestions(): OptimizationSuggestion[] {\n    return this.metrics.generateOptimizationSuggestions();\n  }\n  \n  private setupListeners(): void {\n    // Listen for document loading events\n    this.loader.on('documentLoaded', (docId: string, tokens: number) => {\n      this.metrics.recordDocumentLoaded(docId, tokens);\n    });\n    \n    // Listen for cache events\n    this.loader.on('cacheHit', (docId: string) => {\n      this.metrics.recordCacheHit(docId);\n    });\n    \n    this.loader.on('cacheMiss', (docId: string) => {\n      this.metrics.recordCacheMiss(docId);\n    });\n  }\n}\n\nclass MetricsStore {\n  private requests: RequestMetric[];\n  private documentLoads: DocumentLoadMetric[];\n  private cacheEvents: CacheEventMetric[];\n  \n  constructor() {\n    this.requests = [];\n    this.documentLoads = [];\n    this.cacheEvents = [];\n  }\n  \n  public recordRequest(metric: RequestMetric): void {\n    this.requests.push(metric);\n    \n    // Keep only recent history\n    if (this.requests.length > 1000) {\n      this.requests.shift();\n    }\n  }\n  \n  public recordDocumentLoaded(docId: string, tokens: number): void {\n    this.documentLoads.push({\n      docId,\n      timestamp: Date.now(),\n      tokens\n    });\n  }\n  \n  public recordCacheHit(docId: string): void {\n    this.cacheEvents.push({\n      docId,\n      timestamp: Date.now(),\n      type: 'hit'\n    });\n  }\n  \n  public recordCacheMiss(docId: string): void {\n    this.cacheEvents.push({\n      docId,\n      timestamp: Date.now(),\n      type: 'miss'\n    });\n  }\n  \n  public generateTokenUsageReport(): TokenUsageReport {\n    // Generate token usage report\n  }\n  \n  public generateLoadingPatternReport(): LoadingPatternReport {\n    // Generate loading pattern report\n  }\n  \n  public generatePerformanceReport(): PerformanceReport {\n    // Generate performance report\n  }\n  \n  public generateOptimizationSuggestions(): OptimizationSuggestion[] {\n    // Generate optimization suggestions\n  }\n}\n\ninterface RequestMetric {\n  sessionId: string;\n  timestamp: number;\n  request: string;\n  loadedDocs: string[];\n  tokenCount: number;\n}\n\ninterface DocumentLoadMetric {\n  docId: string;\n  timestamp: number;\n  tokens: number;\n}\n\ninterface CacheEventMetric {\n  docId: string;\n  timestamp: number;\n  type: 'hit' | 'miss';\n}\n\ninterface TokenUsageReport {\n  averageTokensPerRequest: number;\n  peakTokenUsage: number;\n  tokenUsageByDocType: Record<string, number>;\n  tokenUsageOverTime: Array<{ timestamp: number; tokens: number }>;\n}\n\ninterface LoadingPatternReport {\n  mostFrequentlyLoadedDocs: Array<{ docId: string; count: number }>;\n  commonLoadingSequences: Array<{ sequence: string[]; count: number }>;\n  averageDocsPerRequest: number;\n}\n\ninterface PerformanceReport {\n  averageLoadTime: number;\n  cacheHitRate: number;\n  requestsPerMinute: number;\n}\n\ninterface OptimizationSuggestion {\n  type: 'preload' | 'combine' | 'split' | 'cache';\n  target: string;\n  reason: string;\n  estimatedImprovement: number;\n}\n```",
+        "testStrategy": "Test monitoring with simulated usage patterns. Verify accuracy of metrics collection. Test report generation for correctness. Validate optimization suggestions against known patterns.",
+        "priority": "low",
+        "dependencies": [
+          3,
+          5,
+          7,
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Implement Enhanced Session Management System",
+        "description": "Create an advanced session management system that extends context persistence beyond the 30-minute limitation, enabling seamless user experiences across session boundaries.",
+        "status": "pending",
+        "dependencies": [
+          3,
+          5
+        ],
+        "priority": "high",
+        "details": "Develop a comprehensive session management system that addresses the current 30-minute context limitation using a Test-Driven Development approach:\n\n1. **Long-term Context Persistence**\n   - Implement a persistent storage mechanism for session data\n   - Create serialization/deserialization methods for context objects\n   - Design a session identifier system for tracking user sessions across time\n   - Implement secure storage with appropriate encryption\n   - Use database-backed persistence with SQLite/IndexedDB\n\n2. **Context Rebuilding**\n   - Create a SessionReconstructor class that can rebuild context from stored sessions\n   - Implement priority-based loading of previous context elements\n   - Add metadata to track context relevance and importance for rebuilding\n   - Support partial context restoration based on relevance to current query\n\n```typescript\ninterface SessionMetadata {\n  sessionId: string;\n  userId: string;\n  startTime: Date;\n  lastActive: Date;\n  contextSize: number;\n  importantTopics: string[];\n  interactionCount: number;\n  tokenUsage: number;\n  commandHistory: string[];\n}\n\nclass SessionManager {\n  private static instance: SessionManager;\n  private documentLoader: LazyDocumentLoader;\n  private cache: DocumentCache;\n  private activeSessions: Map<string, SessionContext>;\n  private persistentStorage: PersistentSessionStorage;\n  \n  constructor() {\n    this.documentLoader = LazyDocumentLoader.getInstance();\n    this.cache = new DocumentCache();\n    this.activeSessions = new Map();\n    this.persistentStorage = new PersistentSessionStorage();\n  }\n  \n  public static getInstance(): SessionManager {\n    if (!SessionManager.instance) {\n      SessionManager.instance = new SessionManager();\n    }\n    return SessionManager.instance;\n  }\n  \n  public async createSession(userId: string): Promise<string> {\n    // Generate session ID and initialize context\n    // Check for previous sessions to restore\n  }\n  \n  public async persistSession(sessionId: string): Promise<boolean> {\n    // Serialize and store session data\n  }\n  \n  public async rebuildSession(sessionId: string, query?: string): Promise<SessionContext> {\n    // Reconstruct context from persistent storage\n  }\n  \n  public async pruneContext(sessionId: string, maxTokens: number): Promise<number> {\n    // Intelligently remove least relevant context elements\n  }\n}\n```\n\n3. **Smart Caching System**\n   - Extend the existing session-based caching to persist across session boundaries\n   - Implement a tiered caching strategy (memory, local storage, server-side)\n   - Add cache invalidation policies based on time and content updates\n   - Create cache warming strategies for predicted user needs\n\n4. **Integration with Sharded Document System**\n   - Connect session manager with the LazyDocumentLoader\n   - Track document relevance across sessions\n   - Implement priority loading of frequently accessed shards\n   - Create session-specific document access patterns\n\n5. **Context Summary Generation**\n   - Develop algorithms to generate concise summaries of session context\n   - Implement importance scoring for context elements\n   - Create a compression system for context that preserves semantic meaning\n   - Support incremental summary updates as sessions progress\n\n```typescript\nclass ContextSummarizer {\n  private static instance: ContextSummarizer;\n  \n  public static getInstance(): ContextSummarizer {\n    if (!ContextSummarizer.instance) {\n      ContextSummarizer.instance = new ContextSummarizer();\n    }\n    return ContextSummarizer.instance;\n  }\n  \n  public generateSummary(context: SessionContext, maxTokens: number): ContextSummary {\n    // Analyze context and generate concise summary\n  }\n  \n  public updateSummary(existingSummary: ContextSummary, newContext: SessionContext): ContextSummary {\n    // Incrementally update an existing summary\n  }\n  \n  private scoreContextImportance(contextElement: ContextElement): number {\n    // Score importance based on recency, relevance, and usage\n  }\n}\n```\n\n6. **Automatic Context Pruning**\n   - Implement intelligent pruning algorithms that preserve critical context\n   - Create token budget management across session boundaries\n   - Add configurable pruning strategies (time-based, relevance-based, etc.)\n   - Implement emergency pruning for approaching hard limits\n\n7. **Session Transition Management**\n   - Create smooth handoff between expiring and new sessions\n   - Implement background session persistence on timeout warnings\n   - Add session recovery mechanisms for unexpected disconnections\n   - Support explicit session saving and restoration by users\n\n8. **Performance Optimization**\n   - Implement asynchronous persistence to avoid blocking user interactions\n   - Add background processing for context summarization and pruning\n   - Create performance metrics tracking for session operations\n   - Optimize serialization formats for size and speed\n\n9. **Session Metadata Tracking**\n   - Track detailed session metadata including timestamps, token usage, and command history\n   - Implement analytics for session usage patterns\n   - Create reporting mechanisms for session performance metrics\n   - Support cross-session analysis for optimization",
+        "testStrategy": "Following a Test-Driven Development approach, we will write tests before implementing the functionality. All tests will be located in `/tests/session/enhanced-session-manager.test.ts`.\n\n1. **Unit Testing**\n   - Create unit tests for each component of the session management system\n   - Test serialization/deserialization with various context sizes and types\n   - Verify context summarization accuracy with different input types\n   - Test pruning algorithms with various context scenarios\n   - Validate session reconstruction with partial and complete data\n   - Test session persistence beyond 30 minutes\n   - Test database-backed persistence with SQLite/IndexedDB\n   - Test automatic pruning when approaching token limits\n   - Test session metadata tracking (timestamps, token usage, command history)\n\n```typescript\n// Example test structure in /tests/session/enhanced-session-manager.test.ts\ndescribe('SessionManager', () => {\n  beforeEach(() => {\n    // Setup test environment\n  });\n  \n  describe('Session Persistence', () => {\n    it('should persist session data beyond 30 minutes', async () => {\n      // Test implementation\n    });\n    \n    it('should store and retrieve session data from database', async () => {\n      // Test implementation\n    });\n  });\n  \n  describe('Context Rebuilding', () => {\n    it('should rebuild context from previous sessions', async () => {\n      // Test implementation\n    });\n    \n    it('should prioritize relevant context elements during rebuilding', async () => {\n      // Test implementation\n    });\n  });\n});\n```\n\n2. **Integration Testing**\n   - Test integration with LazyDocumentLoader using mock document repositories\n   - Verify session persistence across simulated timeouts\n   - Test context rebuilding with actual user query patterns\n   - Validate cache performance with realistic document access patterns\n   - Test end-to-end session transitions with simulated user sessions\n   - Test cross-session context retrieval\n   - Test context summary generation for transitions\n\n3. **Performance Testing**\n   - Measure context persistence and retrieval times with various context sizes\n   - Test system performance under high concurrency scenarios\n   - Benchmark memory usage during context summarization and pruning\n   - Measure token efficiency compared to non-persistent sessions\n   - Test recovery times from cold starts with persisted sessions\n   - Test performance under various session scenarios (short sessions, long sessions, high activity)\n\n4. **Scenario Testing**\n   - Simulate extended user sessions spanning multiple 30-minute periods\n   - Test session recovery after unexpected disconnections\n   - Verify context quality after multiple session transitions\n   - Test with real-world query patterns to ensure context relevance is maintained\n   - Validate behavior when approaching token limits\n\n5. **User Experience Testing**\n   - Measure perceived continuity across session boundaries\n   - Test with actual user workflows to verify context relevance\n   - Validate that critical context is preserved after pruning\n   - Measure response time impact of session management operations\n   - Test with various session durations and interaction patterns",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create test suite for session persistence",
+            "description": "Write tests for session persistence beyond 30 minutes and database-backed storage",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create test suite for context rebuilding",
+            "description": "Write tests for context rebuilding from previous sessions and cross-session context retrieval",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create test suite for context summarization",
+            "description": "Write tests for context summary generation and updates during session transitions",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create test suite for automatic pruning",
+            "description": "Write tests for automatic pruning when approaching token limits and token budget management",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create test suite for session metadata tracking",
+            "description": "Write tests for tracking timestamps, token usage, and command history across sessions",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Create test suite for LazyDocumentLoader integration",
+            "description": "Write tests for integration between SessionManager and LazyDocumentLoader",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement SessionManager and PersistentSessionStorage",
+            "description": "Implement the core session management classes following the TDD approach",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement ContextSummarizer",
+            "description": "Implement the context summarization system following the TDD approach",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement database adapters for SQLite/IndexedDB",
+            "description": "Create adapters for database-backed persistence using SQLite and IndexedDB",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement performance testing scenarios",
+            "description": "Create performance tests for various session scenarios and load conditions",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-24T06:53:28.637Z",
+      "updated": "2025-07-24T07:12:12.545Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
