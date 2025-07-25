@@ -1,33 +1,29 @@
 # SuperClaude Enterprise Bootstrap
 
-## Initialization
+## System Initialization
 
-This is the minimal bootstrap file for SuperClaude Enterprise. To initialize the system, the LazyDocumentLoader will load the necessary documentation on demand.
+Minimal bootstrap for SuperClaude Enterprise MCP server. The DocumentLoader lazily loads sharded documentation on-demand to manage context window (30-minute sessions, <500 tokens).
 
 ## Registry
 
-All documentation is organized in a sharded structure. The main registry file `registry.json` contains mappings to all documentation components.
+Document registry: `./src/docs/bootstrap/registry.json`
 
 ## Lazy Loading
 
-Documentation is loaded only when needed. The system uses lazy loading to minimize context window usage and improve performance.
+Documents load dynamically based on request context. Session management ensures optimal token usage.
 
-## Quick Start
+## Bootstrap Flow
 
-1. Initialize the DocumentLoader
-2. Load required documentation based on user request
-3. Cache loaded documents for session reuse
+1. Initialize DocumentLoader with registry
+2. Load documents on-demand 
+3. Shard large documents
+4. Manage session context
 
-## Available Documentation
+## Architecture
 
-For a complete list of available documentation, refer to `registry.json`. Documentation is organized by:
-- Commands
-- Flags  
-- Personas
-- Modes
-- Orchestrator components
-- Principles
-- Rules
-- MCP servers
+- **MCP Server**: Model Context Protocol integration
+- **Document Sharding**: Split documents <2000 tokens
+- **Session Management**: 30-minute windows
+- **Lazy Loading**: On-demand document retrieval
 
-Total tokens in this bootstrap file: approximately 150 tokens.
+Essential documents defined in `./src/docs/bootstrap/fallback-config.json`

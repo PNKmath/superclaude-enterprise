@@ -1,0 +1,33 @@
+{
+  "essentialDocuments": [
+    "bootstrap",
+    "commands/analysis/analyze",
+    "commands/development/build",
+    "flags/planning/think",
+    "orchestrator/routing-intelligence"
+  ],
+  "priorityOrder": {
+    "bootstrap": 100,
+    "orchestrator": 90,
+    "commands": 80,
+    "flags": 70,
+    "personas": 60,
+    "modes": 50,
+    "principles": 40,
+    "rules": 30,
+    "mcp": 20
+  },
+  "sessionDefaults": {
+    "maxTokens": 15000,
+    "sessionDurationMinutes": 30,
+    "evictionStrategy": "lru",
+    "chunkSize": 2000
+  },
+  "emergencyFallback": {
+    "minimalSet": [
+      "bootstrap",
+      "orchestrator/routing-intelligence"
+    ],
+    "maxTokensPerDocument": 500
+  }
+}

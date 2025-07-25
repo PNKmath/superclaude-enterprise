@@ -1,0 +1,256 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-11-25T10:00:00Z",
+  "documents": {
+    "commands": {
+      "analysis": [
+        {
+          "name": "analyze",
+          "path": "commands/analysis/analyze.md",
+          "description": "Multi-dimensional code and system analysis",
+          "category": "analysis"
+        },
+        {
+          "name": "troubleshoot",
+          "path": "commands/analysis/troubleshoot.md",
+          "description": "Problem investigation",
+          "category": "analysis"
+        }
+      ],
+      "development": [
+        {
+          "name": "build",
+          "path": "commands/development/build.md",
+          "description": "Project builder with framework detection",
+          "category": "development"
+        },
+        {
+          "name": "implement",
+          "path": "commands/development/implement.md",
+          "description": "Feature and code implementation",
+          "category": "development"
+        }
+      ],
+      "quality": [
+        {
+          "name": "improve",
+          "path": "commands/quality/improve.md",
+          "description": "Evidence-based code enhancement",
+          "category": "quality"
+        },
+        {
+          "name": "cleanup",
+          "path": "commands/quality/cleanup.md",
+          "description": "Project cleanup and technical debt reduction",
+          "category": "quality"
+        }
+      ],
+      "meta": [
+        {
+          "name": "index",
+          "path": "commands/meta/index.md",
+          "description": "Command catalog browsing",
+          "category": "meta"
+        },
+        {
+          "name": "load",
+          "path": "commands/meta/load.md",
+          "description": "Project context loading",
+          "category": "meta"
+        }
+      ]
+    },
+    "flags": {
+      "planning": [
+        {
+          "name": "think",
+          "path": "flags/planning/think.md",
+          "description": "Multi-file analysis (~4K tokens)",
+          "category": "planning",
+          "type": "boolean"
+        },
+        {
+          "name": "think-hard",
+          "path": "flags/planning/think-hard.md",
+          "description": "Deep architectural analysis (~10K tokens)",
+          "category": "planning",
+          "type": "boolean"
+        }
+      ],
+      "compression": [
+        {
+          "name": "uc",
+          "path": "flags/compression/uc.md",
+          "description": "30-50% token reduction",
+          "category": "compression",
+          "type": "boolean"
+        }
+      ],
+      "mcp": [
+        {
+          "name": "seq",
+          "path": "flags/mcp/seq.md",
+          "description": "Enable Sequential for complex multi-step analysis",
+          "category": "mcp",
+          "type": "boolean"
+        },
+        {
+          "name": "c7",
+          "path": "flags/mcp/c7.md",
+          "description": "Enable Context7 for library documentation",
+          "category": "mcp",
+          "type": "boolean"
+        }
+      ],
+      "scope": [
+        {
+          "name": "scope",
+          "path": "flags/scope/scope.md",
+          "description": "Set analysis scope level",
+          "category": "scope",
+          "type": "string"
+        }
+      ],
+      "personas": [
+        {
+          "name": "persona-architect",
+          "path": "flags/personas/persona-architect.md",
+          "description": "Systems architecture specialist",
+          "category": "personas",
+          "type": "boolean"
+        }
+      ],
+      "iteration": [
+        {
+          "name": "loop",
+          "path": "flags/iteration/loop.md",
+          "description": "Enable iterative improvement mode",
+          "category": "iteration",
+          "type": "boolean"
+        }
+      ]
+    },
+    "personas": [
+      {
+        "name": "architect",
+        "path": "personas/architect.md",
+        "description": "Systems architecture specialist",
+        "autoActivationScore": 0.9
+      },
+      {
+        "name": "frontend",
+        "path": "personas/frontend.md",
+        "description": "UX specialist, accessibility advocate",
+        "autoActivationScore": 0.8
+      },
+      {
+        "name": "backend",
+        "path": "personas/backend.md",
+        "description": "Reliability engineer, API specialist",
+        "autoActivationScore": 0.8
+      },
+      {
+        "name": "analyzer",
+        "path": "personas/analyzer.md",
+        "description": "Root cause specialist",
+        "autoActivationScore": 0.85
+      }
+    ],
+    "modes": [
+      {
+        "name": "task-management",
+        "path": "modes/task-management.md",
+        "description": "Structured workflow execution"
+      },
+      {
+        "name": "introspection",
+        "path": "modes/introspection.md",
+        "description": "Transparency into thinking process"
+      },
+      {
+        "name": "token-efficiency",
+        "path": "modes/token-efficiency.md",
+        "description": "Optimized communication"
+      }
+    ],
+    "orchestrator": {
+      "detection": {
+        "name": "detection-engine",
+        "path": "orchestrator/detection-engine.md",
+        "description": "Pattern recognition and analysis"
+      },
+      "routing": {
+        "name": "routing-intelligence",
+        "path": "orchestrator/routing-intelligence.md",
+        "description": "Dynamic decision trees"
+      },
+      "quality": {
+        "name": "quality-gates",
+        "path": "orchestrator/quality-gates.md",
+        "description": "Validation framework"
+      }
+    },
+    "principles": {
+      "core": {
+        "name": "core-philosophy",
+        "path": "principles/core-philosophy.md",
+        "description": "Core development principles"
+      },
+      "solid": {
+        "name": "solid-principles",
+        "path": "principles/solid-principles.md",
+        "description": "SOLID design principles"
+      }
+    },
+    "rules": {
+      "operational": {
+        "name": "operational-rules",
+        "path": "rules/operational-rules.md",
+        "description": "Core operational rules",
+        "priority": "high"
+      },
+      "file-operation": {
+        "name": "file-operation-security",
+        "path": "rules/file-operation-security.md",
+        "description": "File operation security rules",
+        "priority": "high"
+      }
+    },
+    "mcp": {
+      "context7": {
+        "name": "context7",
+        "path": "mcp/context7.md",
+        "description": "Documentation and research server",
+        "capabilities": ["documentation", "search", "patterns"]
+      },
+      "sequential": {
+        "name": "sequential",
+        "path": "mcp/sequential.md",
+        "description": "Complex analysis and thinking",
+        "capabilities": ["analysis", "problem-solving", "debugging"]
+      },
+      "magic": {
+        "name": "magic",
+        "path": "mcp/magic.md",
+        "description": "UI components and design",
+        "capabilities": ["ui-generation", "design-systems", "components"]
+      },
+      "playwright": {
+        "name": "playwright",
+        "path": "mcp/playwright.md",
+        "description": "Browser automation and testing",
+        "capabilities": ["e2e-testing", "performance", "automation"]
+      }
+    }
+  },
+  "metadata": {
+    "totalDocuments": 32,
+    "categories": {
+      "commands": ["analysis", "development", "quality", "meta"],
+      "flags": ["planning", "compression", "mcp", "scope", "personas", "iteration"],
+      "principles": ["core", "solid"],
+      "rules": ["operational", "file-operation"]
+    },
+    "indexedAt": "2024-11-25T10:00:00Z"
+  }
+}
